@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Classes — The Life Navigator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="../../assets/js/auth.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      background: linear-gradient(90deg, #0073e6, #00c6ff);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+    .back-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      color: #fff;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.25); }
+    .user-pill {
+      background: rgba(255,255,255,0.15);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      color: #fff;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* ── Content ── */
+    .content { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .live-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #e53935;
+      animation: pulse 1.4s ease-in-out infinite;
+      display: inline-block;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+
+    /* ── Class Cards ── */
+    .class-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .class-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 14px;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .class-card:hover { transform: translateY(-4px); border-color: #0073e6; }
+
+    .card-header {
+      padding: 16px 18px 12px;
+      background: linear-gradient(135deg, #1a2533, #1e2a3a);
+      border-bottom: 1px solid #30363d;
+    }
+    .card-subject {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #00c6ff;
+      margin-bottom: 4px;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #e6edf3;
+      line-height: 1.3;
+    }
+
+    .card-body { padding: 14px 18px; }
+    .card-meta {
+      display: flex; flex-direction: column; gap: 7px;
+      font-size: 0.82rem;
+      color: #8b949e;
+    }
+    .card-meta span { display: flex; align-items: center; gap: 8px; }
+    .card-meta i { width: 14px; color: #0073e6; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .status-live    { background: #2a1a1a; color: #f87171; border: 1px solid #e53935; }
+    .status-soon    { background: #1a2a1a; color: #4ade80; border: 1px solid #28a745; }
+    .status-upcoming{ background: #1a1a2a; color: #93c5fd; border: 1px solid #3b82f6; }
+    .status-ended   { background: #1a1a1a; color: #6b7280; border: 1px solid #374151; }
+
+    .join-btn {
+      width: 100%;
+      padding: 10px;
+      margin-top: 14px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .join-btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+    .join-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .join-btn.active { background: linear-gradient(90deg, #e53935, #ff6f61); color: #fff; }
+    .join-btn.soon   { background: linear-gradient(90deg, #28a745, #00c6ff); color: #fff; }
+    .join-btn.ended  { background: #21262d; color: #6b7280; border: 1px solid #30363d; }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #8b949e;
+    }
+    .empty-state i { font-size: 3rem; margin-bottom: 16px; color: #30363d; }
+    .empty-state p { font-size: 0.95rem; }
+
+    /* ── Loader ── */
+    .loader-wrap {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; padding: 60px;
+      color: #8b949e;
+    }
+    .spin {
+      width: 28px; height: 28px;
+      border: 3px solid #30363d;
+      border-top-color: #0073e6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Schedule Banner ── */
+    .info-banner {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-left: 4px solid #ffcc00;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 0.85rem;
+      color: #8b949e;
+      margin-bottom: 28px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .info-banner i { color: #ffcc00; font-size: 1rem; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="../../parents_homepage.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+      <h1>🎥 LIVE CLASSES</h1>
+    </div>
+    <div class="user-pill">
+      <i class="fas fa-user-graduate"></i>
+      <span id="userName">Student</span> &nbsp;·&nbsp;
+      <span id="userClass">–</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="info-banner" style="justify-content:space-between;flex-wrap:wrap;">
+      <span><i class="fas fa-info-circle"></i>
+      Classes scheduled by your teacher. Join button activates when class starts.</span>
+      <span style="font-size:.72rem;color:#8b949e;" id="lastRefresh">Auto-refreshes every 15s</span>
+    </div>
+    <div id="liveAlert" style="display:none;background:#2a1a1a;border:1px solid #e53935;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;animation:flashLive 1s ease-in-out 3;">
+      <span style="width:12px;height:12px;border-radius:50%;background:#e53935;animation:pulse 1s ease-in-out infinite;flex-shrink:0;display:inline-block;"></span>
+      <span style="color:#f87171;font-weight:600;font-size:.9rem;" id="liveAlertText">A class is live now! Click Join Now below.</span>
+    </div>
+    <style>@keyframes flashLive{0%,100%{opacity:1}50%{opacity:.6}}</style>
+
+    <!-- Live Now -->
+    <div class="section-title">
+      <span class="live-dot"></span> Live Now
+    </div>
+    <div class="class-grid" id="liveGrid">
+      <div class="loader-wrap"><div class="spin"></div> Loading live classes…</div>
+    </div>
+
+    <!-- Upcoming -->
+    <div class="section-title" style="margin-top:8px;">
+      <i class="fas fa-calendar-alt" style="color:#0073e6"></i> Upcoming Classes
+    </div>
+    <div class="class-grid" id="upcomingGrid">
+      <div class="loader-wrap"><div class="spin"></div> Loading schedule…</div>
+    </div>
+
+  </div>
+
+<script>
+  // ── Auth Guard ─────────────────────────────────────────────────────────────
+  const userId    = localStorage.getItem('userId')      || '';
+  const userName  = localStorage.getItem('studentName') || 'Student';
+  const userClass = localStorage.getItem('className')   || '';
+  if (!userId) { window.location.replace('./login.html'); }
+  document.getElementById('userName').textContent  = userName;
+  document.getElementById('userClass').textContent = userClass;
+
+  // ── Config ─────────────────────────────────────────────────────────────────
+  // 🔧 REPLACE with your Apps Script Web App URL (the updated one from gas/Code.gs)
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxciYsOSxiKN2k9FWMdFuqpt5OKkp6EDsSp2xPmfZcGARVAXWdhbQTIYHabMygnRhk/exec';
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function parseStatus(scheduledTime) {
+    const now      = Date.now();
+    const start    = new Date(scheduledTime).getTime();
+    const diffMins = (start - now) / 60000;
+    // Sheet status takes priority — this is only fallback from time
+    if (diffMins < -180)  return 'ended';   // ended if >3hrs past
+    if (diffMins < 15)    return 'live';    // live from 15min before start to 3hrs after
+    if (diffMins <= 60)   return 'soon';    // starting soon up to 1hr before
+    return 'upcoming';
+  }
+
+  function fmtTime(iso) {
+    return new Date(iso).toLocaleString(undefined, {
+      weekday:'short', month:'short', day:'numeric',
+      hour:'2-digit', minute:'2-digit'
+    });
+  }
+
+  function buildCard(cls) {
+    const status = cls.status || parseStatus(cls.scheduled_time);
+    const badges = {
+      live:     `<span class="status-badge status-live"><span class="live-dot"></span>LIVE NOW</span>`,
+      soon:     `<span class="status-badge status-soon">⏰ Starting Soon</span>`,
+      upcoming: `<span class="status-badge status-upcoming">📅 Upcoming</span>`,
+      ended:    `<span class="status-badge status-ended">✅ Ended</span>`,
+    };
+    const btns = {
+      live:     `<button class="join-btn active" onclick="joinClass('${cls.room_id}','${cls.title}')"><i class="fas fa-video"></i> Join Now</button>`,
+      soon:     `<button class="join-btn soon"   onclick="joinClass('${cls.room_id}','${cls.title}')"><i class="fas fa-door-open"></i> Enter Early</button>`,
+      upcoming: `<button class="join-btn ended"  disabled><i class="fas fa-clock"></i> Not Started</button>`,
+      ended:    `<button class="join-btn ended"  disabled><i class="fas fa-check-circle"></i> Class Ended</button>`,
+    };
+    return `
+      <div class="class-card">
+        <div class="card-header">
+          <div class="card-subject">${cls.subject || 'General'}</div>
+          <div class="card-title">${cls.title}</div>
+        </div>
+        <div class="card-body">
+          ${badges[status] || badges.upcoming}
+          <div class="card-meta">
+            <span><i class="fas fa-chalkboard-teacher"></i>${cls.teacher || 'Your Teacher'}</span>
+            <span><i class="fas fa-clock"></i>${fmtTime(cls.scheduled_time)}</span>
+            <span><i class="fas fa-users"></i>${cls.target_class || 'All Classes'}</span>
+          </div>
+          ${btns[status] || btns.upcoming}
+        </div>
+      </div>`;
+  }
+
+  function joinClass(roomId, title) {
+    // Store room info so ./classroom.html can pick it up
+    localStorage.setItem('liveRoomId',    roomId);
+    localStorage.setItem('liveRoomTitle', title);
+    window.location.href = './classroom.html';
+  }
+
+  // ── Fetch Schedule from Google Sheet ──────────────────────────────────────
+  async function loadSchedule() {
+    try {
+      // Use POST to avoid Google redirect dropping params
+      const res  = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'action=live_schedule&class=' + encodeURIComponent(userClass)
+      });
+      const data = await res.json();
+      const classes = data.classes || [];
+
+      const live     = classes.filter(c => (c.status || parseStatus(c.scheduled_time)) === 'live');
+      const soon     = classes.filter(c => (c.status || parseStatus(c.scheduled_time)) === 'soon');
+      const upcoming = classes.filter(c => (c.status || parseStatus(c.scheduled_time)) === 'upcoming');
+      const ended    = classes.filter(c => (c.status || parseStatus(c.scheduled_time)) === 'ended').slice(0,3);
+
+      const liveNow = [...live, ...soon];
+
+      // Show alert banner when live classes exist
+      const alertBanner = document.getElementById('liveAlert');
+      const alertText   = document.getElementById('liveAlertText');
+      if (liveNow.length > 0 && alertBanner) {
+        alertBanner.style.display = 'flex';
+        alertText.textContent = liveNow[0].title + ' is LIVE now! Click Join Now below.';
+      } else if (alertBanner) {
+        alertBanner.style.display = 'none';
+      }
+
+      document.getElementById('liveGrid').innerHTML =
+        liveNow.length
+          ? liveNow.map(buildCard).join('')
+          : `<div class="empty-state"><i class="fas fa-satellite-dish"></i><p>No live classes right now.<br>Check back soon!</p></div>`;
+
+      document.getElementById('upcomingGrid').innerHTML =
+        upcoming.length
+          ? [...upcoming, ...ended].map(buildCard).join('')
+          : `<div class="empty-state"><i class="fas fa-calendar"></i><p>No upcoming classes scheduled yet.</p></div>`;
+
+    } catch (err) {
+      // Graceful fallback — show demo card so layout is visible
+      console.error('Schedule load error:', err);
+      const demoClass = {
+        title: 'Demo: Science Chapter 3',
+        subject: 'Science',
+        teacher: 'Your Teacher',
+        scheduled_time: new Date(Date.now() + 5 * 60000).toISOString(),
+        room_id: 'demo-room-001',
+        target_class: userClass || 'All Classes',
+        status: 'soon'
+      };
+      document.getElementById('liveGrid').innerHTML = buildCard(demoClass);
+      document.getElementById('upcomingGrid').innerHTML =
+        `<div class="empty-state"><i class="fas fa-exclamation-circle"></i>
+         <p>Could not load schedule.<br>Check your internet connection.</p></div>`;
+    }
+  }
+
+  loadSchedule();
+
+  // Auto-refresh every 15 seconds so students see live class quickly
+  let _refreshCount = 0;
+  setInterval(() => {
+    _refreshCount++;
+    loadSchedule();
+    document.getElementById('lastRefresh').textContent =
+      'Auto-refreshed ' + _refreshCount + 'x · last: ' + new Date().toLocaleTimeString();
+  }, 15000);
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+/* north-theme.css — Shared Design Tokens for The Life Navigator NORTH */
+
+:root {
+  /* Brand */
+  --nav-blue:       #0073e6;
+  --nav-blue-dark:  #004fa3;
+  --nav-cyan:       #00c6ff;
+  --nav-gold:       #ffcc00;
+  --nav-red:        #ff6f61;
+  --nav-green:      #28a745;
+
+  /* Live Classroom specific */
+  --live-red:       #e53935;
+  --live-green:     #43a047;
+  --live-dark:      #0d1117;
+  --live-panel:     #161b22;
+  --live-border:    #30363d;
+  --live-text:      #e6edf3;
+  --live-muted:     #8b949e;
+
+  /* Surfaces */
+  --surface-1: #ffffff;
+  --surface-2: #f8f9fa;
+  --surface-3: #e9ecef;
+
+  /* Typography */
+  --font-display: 'Orbitron', 'Rajdhani', sans-serif;
+  --font-body:    'Poppins', 'Arial', sans-serif;
+
+  /* Radius */
+  --r-sm: 6px;
+  --r-md: 12px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  /* Shadow */
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.15);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.25);
+}
+
+/* Utility: hide/show */
+.tln-hidden { display: none !important; }
+.tln-flex   { display: flex !important; }
+
+/* Live badge pulse */
+@keyframes tln-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(1.15); }
+}
+.live-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--live-red);
+  animation: tln-pulse 1.4s ease-in-out infinite;
+  margin-right: 6px;
+}

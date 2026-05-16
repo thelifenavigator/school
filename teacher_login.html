@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Login — The Life Navigator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Poppins',sans-serif;background:linear-gradient(135deg,#0d2137 0%,#0d47a1 50%,#0d2137 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#e6edf3}
+    .brand{text-align:center;margin-bottom:28px}
+    .brand h1{font-family:'Orbitron',sans-serif;font-size:clamp(1.2rem,4vw,1.8rem);font-weight:900;background:linear-gradient(90deg,#60a5fa,#ffcc00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px}
+    .brand p{font-size:.82rem;color:#5e92d6;margin-top:4px;letter-spacing:1px}
+    .card{background:rgba(13,29,51,.95);border:1px solid #1565c0;border-radius:16px;padding:36px 32px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(21,101,192,.3)}
+    .card h2{font-size:1rem;font-weight:600;margin-bottom:24px;color:#60a5fa;display:flex;align-items:center;gap:8px}
+    .field{margin-bottom:16px}
+    .field label{display:block;font-size:.75rem;color:#5e92d6;margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase}
+    .field input{width:100%;padding:12px 14px;background:#060d1a;border:1px solid #1565c0;border-radius:8px;color:#e6edf3;font-size:.95rem;font-family:'Poppins',sans-serif;outline:none;transition:border-color .2s}
+    .field input:focus{border-color:#60a5fa}
+    .pw-wrap{position:relative}
+    .pw-wrap input{padding-right:44px}
+    .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#5e92d6;cursor:pointer;font-size:1rem;padding:4px}
+    .btn-login{width:100%;padding:14px;background:linear-gradient(90deg,#1565c0,#1976d2);border:none;border-radius:8px;color:#fff;font-size:1rem;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;letter-spacing:1px;transition:opacity .2s,transform .2s;margin-top:4px}
+    .btn-login:hover{opacity:.9;transform:translateY(-1px)}
+    .btn-login:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .back-link{text-align:center;margin-top:16px;font-size:.82rem;color:#5e92d6}
+    .back-link a{color:#60a5fa;text-decoration:none}
+    .back-link a:hover{text-decoration:underline}
+    .role-badge{display:inline-flex;align-items:center;gap:6px;background:#0d2a4a;border:1px solid #1565c0;border-radius:999px;padding:4px 14px;font-size:.75rem;color:#60a5fa;margin-bottom:20px}
+    #loader{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+    .spin-ring{width:44px;height:44px;border:4px solid #30363d;border-top-color:#60a5fa;border-radius:50%;animation:spin .9s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .err-msg{background:#1a0a0a;border:1px solid #e53935;border-radius:8px;padding:10px 14px;font-size:.82rem;color:#f87171;margin-bottom:14px;display:none}
+    .info-box{background:#0d2a4a;border:1px solid #1565c0;border-radius:8px;padding:12px 14px;font-size:.8rem;color:#93c5fd;margin-bottom:16px;line-height:1.6}
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <h1>THE LIFE NAVIGATOR</h1>
+    <p>Teacher Portal</p>
+  </div>
+
+  <div class="card">
+    <div class="role-badge"><i class="fas fa-chalkboard-teacher"></i> Faculty Access</div>
+    <h2><i class="fas fa-sign-in-alt"></i> Teacher Login</h2>
+
+    <div class="info-box">
+      <i class="fas fa-info-circle"></i>
+      Use your <strong>mobile number</strong> as both username and password (unless changed).
+      Your class will be allotted by the Admin.
+    </div>
+
+    <div class="err-msg" id="errMsg"></div>
+
+    <form id="teacherLoginForm">
+      <div class="field">
+        <label>👤 Username (Mobile Number)</label>
+        <input type="text" id="username" placeholder="Enter your mobile number" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label>🔑 Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
+          <button type="button" class="pw-toggle" onclick="togglePw()"><i class="fas fa-eye" id="pwIcon"></i></button>
+        </div>
+      </div>
+      <button type="submit" class="btn-login" id="loginBtn">
+        <i class="fas fa-chalkboard-teacher"></i> &nbsp;Enter Teacher Portal
+      </button>
+    </form>
+
+    <div class="back-link">
+      <a href="./login.html"><i class="fas fa-arrow-left"></i> Student / Parent Login</a>
+      &nbsp;|&nbsp;
+      <a href="./admin_login.html"><i class="fas fa-cog"></i> Admin Login</a>
+    </div>
+  </div>
+
+  <div id="loader">
+    <div class="spin-ring"></div>
+    <p style="font-size:.85rem;color:#5e92d6">Verifying credentials…</p>
+  </div>
+
+<script>
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxciYsOSxiKN2k9FWMdFuqpt5OKkp6EDsSp2xPmfZcGARVAXWdhbQTIYHabMygnRhk/exec';
+
+  // Already logged in as teacher → go straight in
+  if (localStorage.getItem('userId') && localStorage.getItem('className') === 'Teachers') {
+    window.location.replace('./teacher.html');
+  }
+
+  function togglePw() {
+    const pw = document.getElementById('password');
+    const ic = document.getElementById('pwIcon');
+    pw.type = pw.type === 'password' ? 'text' : 'password';
+    ic.className = pw.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+  }
+
+  function showErr(msg) {
+    const el = document.getElementById('errMsg');
+    el.textContent = msg; el.style.display = 'block';
+  }
+
+  document.getElementById('teacherLoginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn      = document.getElementById('loginBtn');
+    const loader   = document.getElementById('loader');
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    document.getElementById('errMsg').style.display = 'none';
+    if (!username || !password) { showErr('Please fill all fields.'); return; }
+
+    btn.disabled = true;
+    loader.style.display = 'flex';
+
+    try {
+      const res  = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'username=' + encodeURIComponent(username) +
+              '&password=' + encodeURIComponent(password) +
+              '&class=Teachers'
+      });
+      const data = await res.json();
+
+      if (data.result !== 'success') {
+        throw new Error('Invalid teacher credentials. Please check your username and password.');
+      }
+
+      const u = data.userData || {};
+      localStorage.setItem('userId',      username);
+      localStorage.setItem('className',   'Teachers');
+      localStorage.setItem('studentName', u.studentName || username);
+      localStorage.setItem('parentName',  u.parentName  || '');
+      localStorage.setItem('schoolName',  u.schoolName  || '');
+      // Store allotted classes
+      localStorage.setItem('classK', u.classK || u.videoTitle4 || '');
+      localStorage.setItem('classL', u.classL || u.videoTitle5 || '');
+      localStorage.setItem('classM', u.classM || u.videoTitle6 || '');
+
+      setTimeout(() => { window.location.href = './teacher.html'; }, 1000);
+
+    } catch (err) {
+      loader.style.display = 'none';
+      btn.disabled = false;
+      showErr(err.message || 'Login failed. Please try again.');
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,1549 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Parent's Navigator Dashboard</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <style>
+    /* --- 1. THEME VARIABLES (Neon/Sci-Fi) --- */
+    :root {
+      --neon-blue: #00f3ff;
+      --neon-purple: #bc13fe;
+      --neon-orange: #ff9e00;
+      --neon-green: #00ff00;
+      --dark-bg: #050b14;
+      --panel-bg: rgba(16, 28, 45, 0.95);
+      --glass-border: 1px solid rgba(0, 243, 255, 0.3);
+      --text-main: #e0e0e0;
+      --sidebar-width: 280px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--dark-bg);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(0, 243, 255, 0.05) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(188, 19, 254, 0.05) 0%, transparent 20%);
+      color: var(--text-main);
+      padding-top: 80px; /* Space for fixed header */
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* --- 2. HEADER --- */
+    .app-header {
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--neon-blue);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 3000;
+      box-shadow: 0 0 15px var(--neon-blue);
+    }
+
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    
+    .menu-toggle {
+      font-size: 1.5rem; color: var(--neon-blue); background: none; border: 1px solid var(--neon-blue);
+      padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: 0.3s;
+    }
+    .menu-toggle:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
+
+    .school-logo-header {
+      width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--neon-orange);
+      background: #fff; object-fit: contain;
+    }
+
+    .header-info h3 { margin: 0; font-family: 'Orbitron', sans-serif; font-size: 1.1em; color: var(--neon-blue); margin-bottom: 2px; }
+    .header-info p { margin: 0; font-size: 0.85em; color: #aaa; }
+
+    .header-right { display: flex; align-items: center; gap: 15px; }
+
+    /* Clock */
+    .datetime-box {
+      font-family: 'Orbitron', monospace; font-size: 0.85rem; color: var(--neon-green);
+      background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px; border: 1px solid #333;
+      display: none; 
+    }
+    @media(min-width: 768px) { .datetime-box { display: block; } }
+
+    /* Change Password Button */
+    .btn-pw {
+      background: linear-gradient(45deg, #ff9e00, #ff6b6b); color: #000; text-decoration: none;
+      padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem;
+      box-shadow: 0 0 10px rgba(255, 158, 0, 0.4); transition: 0.3s; white-space: nowrap;
+    }
+    .btn-pw:hover { transform: scale(1.05); filter: brightness(1.2); color: #000; text-decoration: none; }
+
+    /* Student Badge */
+    .student-badge {
+      text-align: right; border: 1px solid var(--neon-purple); padding: 4px 12px;
+      border-radius: 20px; background: rgba(188, 19, 254, 0.1); display: none;
+    }
+    @media(min-width: 600px) { .student-badge { display: block; } }
+    .student-badge span { display: block; font-weight: bold; color: #fff; font-size: 0.9em; }
+    .student-badge small { color: var(--neon-purple); text-transform: uppercase; font-size: 0.7em; }
+
+    /* --- 3. SIDEBAR --- */
+    .sidebar-overlay {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8); z-index: 2900; backdrop-filter: blur(3px);
+    }
+
+    .mission-sidebar {
+      position: fixed; top: 70px; left: 0; bottom: 0; width: var(--sidebar-width);
+      background: #020408; border-right: 2px solid var(--neon-blue);
+      z-index: 2950; overflow-y: auto;
+      transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; flex-direction: column; padding: 20px 10px;
+      box-shadow: 5px 0 20px rgba(0,0,0,0.8);
+    }
+    .mission-sidebar.open { transform: translateX(0); }
+
+    .button-section {
+        display: grid; grid-template-columns: repeat(2, 1fr); 
+        gap: 15px; justify-items: center; margin-top: 10px;
+    }
+    .round-button {
+        width: 75px; height: 75px;
+        border-radius: 50%;
+        background-size: cover; background-position: center;
+        border: 2px solid var(--neon-blue);
+        box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        transition: transform 0.2s; cursor: pointer; display: block;
+    }
+    .round-button:hover { transform: scale(1.1); border-color: var(--neon-orange); box-shadow: 0 0 20px var(--neon-orange); }
+
+    /* --- 4. MAIN CONTENT --- */
+    main { padding: 20px; max-width: 1100px; margin: 0 auto; }
+
+    .sci-panel {
+        background: var(--panel-bg);
+        border: var(--glass-border);
+        border-radius: 15px; padding: 20px; margin-bottom: 30px;
+        position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .sci-panel::before { content:''; position:absolute; top:0; left:0; width:20px; height:20px; border-top:3px solid var(--neon-blue); border-left:3px solid var(--neon-blue); border-radius:12px 0 0 0; }
+    .sci-panel::after { content:''; position:absolute; bottom:0; right:0; width:20px; height:20px; border-bottom:3px solid var(--neon-purple); border-right:3px solid var(--neon-purple); border-radius:0 0 12px 0; }
+
+    .section-header { font-size: 1.4em; color: var(--neon-blue); margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+
+    /* --- 5. MESSAGES SECTION (FIXED & OPTIMIZED) --- */
+    .messages-container {
+        display: none; /* Hidden unless messages exist */
+        flex-direction: column; /* VERTICAL STACKING */
+        gap: 20px;
+        margin-bottom: 30px;
+        width: 100%;
+    }
+
+    .msg-box {
+        width: 100%; /* FULL WIDTH */
+        background: rgba(10, 15, 25, 0.8);
+        border: 1px solid;
+        border-radius: 12px;
+        padding: 15px;
+        position: relative;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        display: none; /* Controlled by JS */
+        transition: transform 0.2s;
+    }
+    .msg-box:hover { transform: translateY(-2px); }
+
+    /* Teacher Style (Blue) */
+    .msg-box.teacher {
+        border-color: var(--neon-blue);
+        box-shadow: 0 0 10px rgba(0, 243, 255, 0.15);
+    }
+    .msg-box.teacher h4 { color: var(--neon-blue); font-size: 1em; margin: 0 0 10px 0; border-bottom: 1px solid rgba(0,243,255,0.3); padding-bottom: 5px; }
+
+    /* Mentor Style (Orange) */
+    .msg-box.mentor {
+        border-color: var(--neon-orange);
+        box-shadow: 0 0 10px rgba(255, 158, 0, 0.15);
+    }
+    .msg-box.mentor h4 { color: var(--neon-orange); font-size: 1em; margin: 0 0 10px 0; border-bottom: 1px solid rgba(255,158,0,0.3); padding-bottom: 5px; }
+
+    .msg-content {
+        color: #ddd;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 500;
+        font-size: 1.15em;
+        line-height: 1.5;
+        white-space: pre-wrap; /* Keeps paragraphs from server */
+        word-wrap: break-word;
+        max-height: 250px;
+        overflow-y: auto;
+    }
+    
+    .msg-content::-webkit-scrollbar { width: 5px; }
+    .msg-content::-webkit-scrollbar-track { background: #000; }
+    .msg-content::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+    /* --- 6. CARDS --- */
+    .app-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+    
+    .app-card {
+        background: #000; border-radius: 12px; height: 180px;
+        position: relative; overflow: hidden; cursor: pointer;
+        border: 1px solid #333; transition: 0.3s;
+    }
+    .app-card:hover { transform: translateY(-5px); border-color: var(--neon-blue); box-shadow: 0 0 20px rgba(0, 243, 255, 0.4); }
+
+    .slideshow-img {
+        width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0;
+        transition: opacity 1.5s ease-in-out;
+    }
+    .fading { opacity: 0; } .active { opacity: 1; }
+
+    .card-label {
+        position: absolute; bottom: 0; width: 100%;
+        background: linear-gradient(to top, #000 20%, transparent);
+        color: #fff; padding: 15px 10px 8px; font-weight: 700; font-family: 'Rajdhani';
+        font-size: 1.2em; z-index: 2; text-shadow: 0 2px 4px #000;
+    }
+    .card-label i { margin-right: 8px; color: var(--neon-orange); }
+
+    /* --- 7. IMPORTED IMAGES & VIDEO --- */
+    .imported-frame { border: 2px solid var(--neon-purple); border-radius: 10px; overflow: hidden; margin-bottom: 10px; box-shadow: 0 0 15px rgba(188, 19, 254, 0.2); }
+    .imported-frame img { width: 100%; display: block; }
+
+    .video-box { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 2px solid var(--neon-blue); box-shadow: 0 0 20px rgba(0,243,255,0.3); }
+    .video-box iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+    /* --- 8. GALLERY --- */
+    .vault-section { margin-top: 40px; }
+    .vault-container {
+        display: flex; gap: 20px; overflow-x: auto; padding: 20px 0;
+        scroll-snap-type: x mandatory; scroll-behavior: smooth;
+        scrollbar-width: none; 
+    }
+    .vault-container::-webkit-scrollbar { display: none; } 
+    
+    .vault-item {
+        flex: 0 0 100%;
+        max-width: 400px;
+        height: 220px;
+        border: 2px solid var(--neon-blue); border-radius: 15px;
+        overflow: hidden; scroll-snap-align: center;
+        position: relative; box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+    .vault-item img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* --- 9. TOAST --- */
+    #toast-notification {
+        position: fixed; bottom: 20px; right: 20px;
+        background: rgba(10, 20, 30, 0.95);
+        border-left: 5px solid var(--neon-blue);
+        padding: 15px 25px; border-radius: 8px;
+        color: #fff; font-family: 'Poppins';
+        display: none; align-items: center; gap: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 9999;
+    }
+    .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: var(--neon-blue); animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* --- 10. AUDIO WIDGET (NEW) --- */
+    .audio-widget {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 4000;
+        background: rgba(5, 11, 20, 0.9);
+        border: 1px solid var(--neon-blue);
+        padding: 8px 15px;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        backdrop-filter: blur(5px);
+        box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        transition: 0.3s;
+    }
+    .audio-widget:hover { box-shadow: 0 0 15px var(--neon-blue); }
+    
+    .audio-btn {
+        background: none;
+        border: none;
+        color: var(--neon-blue);
+        font-size: 1.2rem;
+        cursor: pointer;
+        width: 30px;
+        text-align: center;
+        transition: 0.3s;
+    }
+    .audio-btn:hover { color: #fff; text-shadow: 0 0 5px var(--neon-blue); }
+    
+    #volumeSlider {
+        -webkit-appearance: none;
+        width: 80px;
+        height: 4px;
+        background: #333;
+        border-radius: 2px;
+        outline: none;
+    }
+    #volumeSlider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px;
+        height: 12px;
+        background: var(--neon-blue);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 0 5px var(--neon-blue);
+    }
+
+    /* Responsive */
+    @media(max-width: 768px) {
+        .header-info h3 { font-size: 0.9em; }
+        .header-info p { font-size: 0.7em; }
+        .vault-item { max-width: 85vw; }
+        .button-section { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+
+  <script>
+      // Security Check
+      if(!localStorage.getItem("studentName")) { window.location.replace("./login.html"); }
+      // Role detection
+      var _userClass = localStorage.getItem("className") || "";
+      var _isTeacher = _userClass === "Teachers";
+      var _isAdmin   = localStorage.getItem("userId") === localStorage.getItem("adminId") || _userClass === "Principal";
+      history.pushState(null, null, location.href);
+      window.onpopstate = function () { history.go(1); };
+  </script>
+  <script src="./assets/js/whiteboard.js"></script>
+  <style>
+    /* ── Ticker ── */
+    .tln-ticker-wrap{background:#0d1117;border-bottom:2px solid var(--neon-blue,#00f3ff);overflow:hidden;position:sticky;top:0;z-index:200;display:none}
+    .tln-ticker-inner{display:flex;align-items:center}
+    .tln-ticker-label{background:var(--neon-blue,#00f3ff);color:#000;font-weight:700;font-size:.72rem;padding:6px 14px;white-space:nowrap;letter-spacing:1px;text-transform:uppercase;flex-shrink:0}
+    .tln-ticker-scroll{overflow:hidden;flex:1;height:32px;display:flex;align-items:center}
+    .tln-ticker-text{white-space:nowrap;animation:tickerScroll 25s linear infinite;font-size:.82rem;color:#e6edf3;padding-left:100%;display:inline-block}
+    @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+    .tln-ticker-text:hover{animation-play-state:paused;cursor:pointer}
+
+    /* ── Live join bar ── */
+    .tln-live-bar{background:linear-gradient(90deg,#1a0808,#2a1010);border-bottom:1px solid #e53935;padding:8px 16px;display:none;align-items:center;gap:12px;flex-wrap:wrap;cursor:pointer;position:sticky;top:32px;z-index:199}
+    .tln-live-bar:hover{background:linear-gradient(90deg,#2a1010,#3a1515)}
+    .tln-live-dot{width:10px;height:10px;border-radius:50%;background:#e53935;animation:pulse 1s ease-in-out infinite;flex-shrink:0}
+    .tln-live-bar-title{color:#f87171;font-weight:700;font-size:.88rem}
+    .tln-live-bar-sub{color:#8b949e;font-size:.75rem}
+    .tln-join-pill{background:#e53935;color:#fff;padding:5px 14px;border-radius:999px;font-size:.78rem;font-weight:700;margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0}
+
+    /* ── Teacher Voice banner ── */
+    .tln-voice-bar{background:#0d1a0d;border:1px solid #22c55e;border-radius:10px;padding:12px 16px;margin:12px 0;display:none;align-items:center;gap:12px;flex-wrap:wrap}
+    .tln-voice-bar.active{display:flex}
+    .voice-wave{display:flex;align-items:center;gap:2px}
+    .voice-wave span{display:block;width:3px;border-radius:3px;background:#22c55e;animation:waveAnim .8s ease-in-out infinite}
+    .voice-wave span:nth-child(1){height:8px;animation-delay:0s}
+    .voice-wave span:nth-child(2){height:16px;animation-delay:.1s}
+    .voice-wave span:nth-child(3){height:12px;animation-delay:.2s}
+    .voice-wave span:nth-child(4){height:20px;animation-delay:.3s}
+    .voice-wave span:nth-child(5){height:10px;animation-delay:.4s}
+    @keyframes waveAnim{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1)}}
+    .vol-ring{width:48px;height:48px;border-radius:50%;background:#1a3a1a;border:2px solid #22c55e;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .2s}
+    .vol-ring.speaking{border-color:#4ade80;box-shadow:0 0 12px rgba(34,197,94,.4)}
+
+    /* ── Student board on homepage ── */
+    .tln-board-access-banner{background:#1a0a0a;border:1px solid #e53935;border-radius:8px;padding:10px 14px;font-size:.78rem;color:#f87171;margin-bottom:10px;display:none;align-items:center;gap:8px}
+    .tln-board-enabled{background:#0d1a0d;border-color:#22c55e;color:#4ade80}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+  </style>
+</head>
+<body>
+
+  <!-- Scrolling Ticker -->
+  <div class="tln-ticker-wrap" id="tlnTicker">
+    <div class="tln-ticker-inner">
+      <div class="tln-ticker-label">📡 NOTICE</div>
+      <div class="tln-ticker-scroll">
+        <span class="tln-ticker-text" id="tlnTickerText"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Class Join Bar -->
+  <div class="tln-live-bar" id="tlnLiveBar" onclick="joinLiveFromHome()">
+    <span class="tln-live-dot"></span>
+    <div>
+      <div class="tln-live-bar-title" id="tlnLiveTitle">🎬 Live Class is ON</div>
+      <div class="tln-live-bar-sub" id="tlnLiveSub">Your teacher is live now</div>
+    </div>
+    <div class="tln-join-pill"><i class="fas fa-video"></i> JOIN NOW</div>
+  </div>
+
+  <header class="app-header">
+    <div class="header-left">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <img id="schoolImageHeader" class="school-logo-header" alt="Logo" src="">
+      <div class="header-info">
+        <h3 id="schoolName">Loading...</h3>
+        <p>Parent: <span id="parentName">...</span></p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="datetime-box" id="clock">00:00:00</div>
+      <!-- Portal buttons — shown by role -->
+      <a id="adminPortalBtn"   href="./admin.html"     class="btn-pw" style="display:none;background:linear-gradient(90deg,#4a148c,#7b1fa2)"><i class="fas fa-cog"></i> Admin</a>
+      <a id="teacherPortalBtn" href="./teacher.html" class="btn-pw" style="display:none;background:linear-gradient(90deg,#0d47a1,#1565c0)"><i class="fas fa-chalkboard-teacher"></i> Teacher Portal</a>
+      <a href="./changepw.html" class="btn-pw"><i class="fas fa-key"></i> Password</a>
+      <button onclick="tlnLogout()" class="btn-pw" style="background:linear-gradient(90deg,#b71c1c,#e53935);border:none;cursor:pointer"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      <div class="student-badge">
+        <small id="roleLabel">Student</small>
+        <span id="studentName">Loading...</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <aside class="mission-sidebar" id="sidebar">
+    <h4 style="text-align:center; color:#fff; font-size:1em; margin-bottom:20px;">NAVIGATOR MENU</h4>
+    <div class="button-section">
+            <a href="https://www.thelifenavigator.com" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/95db2-dallc2b7e-2024-10-12-19.09.13-a-luxurious-3d-round-shaped-golden-emblem-with-a-globe-showing-more-continents-and-a-tree-of-life-design-without-deep-roots.-the-globe-should-display.webp');" target="_blank"></a>
+            <a href="https://thelifenavigator.com/know-your-navigators/" target="_blank" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/b0609-book-your-nav1.webp');"></a>
+            <a href="https://thelifenavigator.com/privacy-policy-for-the-life-navigator/" target="_blank" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/0be9e-dallc2b7e-2024-10-12-19.09.19-a-luxurious-3d-golden-emblem-featuring-a-blue-and-gold-globe-with-a-torch-on-the-side.-below-the-globe-is-a-large-button-with-the-text-privacy-policy.webp');"></a>
+            <a href="https://thelifenavigator.com/publication-house-books-journals/" target="_blank" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/9d2c2-dallc2b7e-2024-10-12-19.09.27-a-luxurious-3d-golden-emblem-featuring-a-blue-and-gold-globe-a-burning-torch-greenery-surrounding-the-globe-and-an-open-book-shape.-the-text-books.webp');"></a>
+            <a href="https://thelifenavigator.com/advisory-committee/" target="_blank" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/272b5-dallc2b7e-2024-10-12-19.09.30-a-luxurious-3d-golden-emblem-featuring-a-globe-a-burning-torch-greenery-surrounding-the-globe-and-an-icon-representing-a-team-or-group-of-people.-t.webp');"></a>
+            <a href="https://thelifenavigator.com/category/the-life-navigator/" target="_blank" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/a5813-dallc2b7e-2024-10-12-19.09.39-a-luxurious-3d-golden-emblem-featuring-a-modern-globe-design-with-a-detailed-map-a-burning-torch-and-a-detailed-newspaper-design.-the-text-news-sh.webp');"></a>
+            <a href="https://thelifenavigator.com/empowering-education-for-all-our-commitment-to-excellence/" target="_blank" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/5aa56-dallc2b7e-2024-10-12-19.09.42-a-luxurious-3d-golden-emblem-featuring-a-book-a-globe-and-a-burning-torch-with-the-text-free-courses-prominently-displayed.-the-design-should-hav.webp');"></a>
+            <a href="https://thelifenavigator.com/vision-mission/" target="_blank" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/869d1-dallc2b7e-2024-10-12-19.09.48-a-luxurious-3d-golden-emblem-featuring-a-globe-a-burning-torch-and-a-digital-screen-with-the-text-vision-mission-prominently-displayed.-the-des.webp');"></a>
+            <a href="https://thelifenavigator.com/sponsor-a-kid-family/" target="_blank" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/083b0-dallc2b7e-2024-10-12-19.09.54-a-luxurious-3d-round-shaped-golden-emblem-featuring-a-globe-a-helping-hand-and-a-symbol-of-a-child.-the-text-sponsor-a-kid-should-be-prominently-d.webp');"></a>
+            <a href="javascript:void(0);" id="logoutBtnSide" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/caff8-dallc2b7e-2024-10-12-19.10.01-a-luxurious-3d-round-shaped-golden-emblem-featuring-a-power-button-symbol-a-globe-and-a-subtle-arrow-to-symbolize-log-out.-the-text-log-out-should.webp');"></a>
+            <a href="https://thelifenavigator.com/new-here-know-about-the-program/" target="_blank" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/668ee-dallc2b7e-2024-10-12-19.17.53-a-luxurious-3d-golden-emblem-featuring-a-globe-a-burning-torch-and-a-digital-screen.-the-text-how-to-boost-bright-learners-should-be-displayed-wit.webp');"></a>
+            <a href="https://thelifenavigator.com/how-ai-based-result-analysis-works/" target="_blank" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/ff183-dallc2b7e-2024-10-12-19.13.03-a-luxurious-3d-round-shaped-golden-emblem-featuring-a-globe-a-magnifying-glass-and-a-bar-graph-to-represent-result-analysis.-the-text-more-about-re.webp');"></a>
+            <a href="./changepw.html" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/753b1-dallc2b7e-2024-10-12-19.10.10-a-luxurious-3d-round-shaped-golden-emblem-featuring-a-globe-a-burning-long-stick-lamp-and-a-key-symbol-representing-security.-the-text-change-passw.webp');"></a>
+            <a href="https://thelifenavigator.com/upcoming-events/" target="_blank" class="round-button" style="background-image: url('https://familynavigator9.files.wordpress.com/2025/05/8731b-dallc2b7e-2024-10-12-19.17.26-a-luxurious-3d-golden-emblem-featuring-a-globe-a-burning-torch-and-a-digital-screen-instead-of-a-book.-the-text-explore-more-should-be-prominently.webp');"></a>
+    </div>
+
+    <!-- Portal access — shown by role -->
+    <div id="sidePortalBtns" style="padding: 0 10px; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+      <a id="sideAdminBtn"   href="./admin.html"
+         style="display:none; background:linear-gradient(90deg,#4a148c,#7b1fa2); color:#fff; padding:10px 16px; border-radius:10px; text-decoration:none; font-size:0.85rem; font-weight:600; align-items:center; gap:8px; justify-content:center;">
+        <i class="fas fa-cog"></i> Admin Portal
+      </a>
+      <a id="sideTeacherBtn" href="./teacher.html"
+         style="display:none; background:linear-gradient(90deg,#0d47a1,#1565c0); color:#fff; padding:10px 16px; border-radius:10px; text-decoration:none; font-size:0.85rem; font-weight:600; align-items:center; gap:8px; justify-content:center;">
+        <i class="fas fa-chalkboard-teacher"></i> Teacher Portal
+      </a>
+      <button onclick="tlnLogout()"
+         style="background:linear-gradient(90deg,#b71c1c,#c62828); color:#fff; padding:10px 16px; border-radius:10px; border:none; cursor:pointer; font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:8px; justify-content:center; width:100%;">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </aside>
+
+  <main>
+    <div class="sci-panel" id="welcome">
+        <h2 class="section-header" id="welcomeHeader">Welcome</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <h4 style="color:var(--neon-purple)"><i class="fas fa-quote-left"></i> Motivation</h4>
+                <div class="imported-frame">
+                    <img id="quoteImg" src="" alt="Quote" loading="lazy">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h4 style="color:var(--neon-blue)"><i class="fas fa-bullhorn"></i> Updates</h4>
+                <div class="imported-frame">
+                    <img id="dynamicImg" src="" alt="Updates" loading="lazy">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Info Card -->
+    <div class="sci-panel" id="teacherInfoPanel" style="display:none; padding:16px 20px; margin-bottom:0;">
+      <h2 class="section-header" style="margin-bottom:14px;">
+        <i class="fas fa-chalkboard-teacher" style="color:var(--neon-blue)"></i> Your Teacher
+      </h2>
+      <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#0073e6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:#fff;flex-shrink:0;" id="teacherAvatar">T</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:1rem;font-weight:600;color:#e6edf3;" id="teacherNameDisplay">–</div>
+          <div style="font-size:0.8rem;color:#8b949e;margin-top:2px;" id="teacherClassDisplay">–</div>
+          <div style="font-size:0.78rem;color:#60a5fa;margin-top:2px;" id="teacherSchoolDisplay">–</div>
+        </div>
+        <a href="./live_home.html"
+           style="background:linear-gradient(90deg,#e53935,#ff6f61);color:#fff;padding:8px 18px;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:6px;white-space:nowrap;">
+          <i class="fas fa-video"></i> Join Class
+        </a>
+      </div>
+    </div>
+
+    <div class="messages-container" id="messagesSection">
+        
+        <div class="msg-box teacher" id="teacherBox">
+            <h4><i class="fas fa-chalkboard-teacher"></i> Teacher's Message</h4>
+            <div class="msg-content" id="teacherMsgText"></div>
+        </div>
+
+        <div class="msg-box mentor" id="mentorBox">
+            <h4><i class="fas fa-user-astronaut"></i> Mentor's Message</h4>
+            <div class="msg-content" id="mentorMsgText"></div>
+        </div>
+
+    </div>
+
+
+    <!-- 🆕 NORTH: Live Classroom Section -->
+    <div class="sci-panel" style="border-color: #e53935;">
+        <h2 class="section-header" style="color:#ff6f61;">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#e53935;margin-right:8px;animation:livepulse 1.2s ease-in-out infinite;"></span>
+          Live Classroom
+        </h2>
+        <style>@keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.4)}}</style>
+
+        <!-- Live class alert — shown when a class is live -->
+        <div id="homeLiveAlert" style="display:none;background:#1a0808;border:1px solid #e53935;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="window.location.href='./live_home.html'">
+          <span style="width:12px;height:12px;border-radius:50%;background:#e53935;animation:livepulse 1s ease-in-out infinite;flex-shrink:0;display:inline-block;"></span>
+          <div style="flex:1">
+            <div style="color:#f87171;font-weight:700;font-size:.88rem;" id="homeLiveTitle">A class is LIVE now!</div>
+            <div style="color:#8b949e;font-size:.75rem;">Tap to join →</div>
+          </div>
+          <i class="fas fa-arrow-right" style="color:#f87171"></i>
+        </div>
+
+        <div class="app-grid">
+          <div class="app-card" onclick="nav('./live_home.html')" style="border-color:#e53935 !important;">
+            <div style="background:linear-gradient(135deg,#1a0a0a,#2a1010);height:120px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+              <div style="font-size:2.5rem;">📡</div>
+              <div style="font-size:0.72rem;color:#f87171;font-weight:700;letter-spacing:2px;text-transform:uppercase;">
+                <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e53935;margin-right:4px;animation:livepulse 1.2s ease-in-out infinite;"></span>
+                Join Live Class
+              </div>
+            </div>
+            <div class="card-label" style="background:linear-gradient(90deg,#e53935,#ff6f61);color:#fff;">
+              <i class="fas fa-video"></i> Live Class Room
+            </div>
+          </div>
+          <div class="app-card" onclick="nav('./live_home.html')">
+            <div style="background:linear-gradient(135deg,#0a1a0a,#0d2a1a);height:120px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+              <div style="font-size:2.5rem;">📅</div>
+              <div style="font-size:0.72rem;color:#4ade80;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Class Schedule</div>
+            </div>
+            <div class="card-label" style="background:linear-gradient(90deg,#28a745,#00c6ff);color:#fff;">
+              <i class="fas fa-calendar-alt"></i> Upcoming Classes
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <!-- Teacher Screen Share View (students see teacher screen live) -->
+    <div class="sci-panel" style="padding:0;overflow:hidden;" id="homeScreenPanel" style="display:none">
+      <div style="background:#0d1117;border-bottom:1px solid #30363d;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600;color:#e6edf3;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#e53935;animation:livepulse 1s ease-in-out infinite;display:inline-block"></span>
+          Teacher's Screen — Live
+        </div>
+        <button onclick="toggleHomeScreenFullscreen()"
+          style="background:#21262d;border:1px solid #30363d;border-radius:6px;color:#e6edf3;padding:5px 12px;font-size:.75rem;cursor:pointer;font-family:inherit">
+          <i class="fas fa-expand"></i> Fullscreen
+        </button>
+      </div>
+      <div style="background:#000;aspect-ratio:16/9;position:relative;">
+        <video id="homeScreenVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:contain;display:block"></video>
+        <div style="position:absolute;bottom:8px;right:8px;background:rgba(13,17,23,.8);border-radius:6px;padding:3px 8px;font-size:.65rem;color:#4ade80;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;margin-right:4px"></span>Live
+        </div>
+      </div>
+    </div>
+
+    <!-- Teacher Voice Channel -->
+    <div class="sci-panel" style="padding:14px 18px;">
+      <h2 class="section-header" style="margin-bottom:14px;">
+        <i class="fas fa-microphone" style="color:#22c55e"></i> Teacher Voice
+      </h2>
+      <div class="tln-voice-bar" id="homeVoiceBar">
+        <div class="vol-ring" id="homeVolRing">
+          <div class="voice-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:.85rem;font-weight:600;color:#4ade80" id="homeVoiceStatus">Teacher connected</div>
+          <div style="font-size:.75rem;color:#8b949e">You can hear your teacher</div>
+          <div id="homeVolBar" style="margin-top:6px;height:4px;background:#30363d;border-radius:3px;width:160px;overflow:hidden">
+            <div id="homeVolFill" style="height:100%;background:#22c55e;width:0%;transition:width .1s"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button id="homeVoiceMuteBtn" onclick="toggleHomeVoiceMic()"
+            style="background:#1a3a2a;border:1px solid #22c55e;border-radius:8px;color:#4ade80;padding:8px 14px;font-size:.8rem;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;">
+            <i class="fas fa-microphone" id="homeVoiceMicIcon"></i> My Mic
+          </button>
+          <button onclick="leaveHomeVoice()"
+            style="background:#2a1a1a;border:1px solid #e53935;border-radius:8px;color:#f87171;padding:8px 14px;font-size:.8rem;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;">
+            <i class="fas fa-phone-slash"></i> Leave
+          </button>
+        </div>
+      </div>
+      <div id="homeVoiceJoinArea" style="display:flex;flex-direction:column;gap:10px;">
+        <p style="font-size:.82rem;color:#8b949e;line-height:1.6;">
+          <i class="fas fa-info-circle" style="color:#60a5fa"></i>
+          When your teacher is live, join the voice channel to hear them directly on this page.
+          Your browser will request mic/speaker permissions.
+        </p>
+        <div id="homePermNotice" style="background:#1a2a3a;border:1px solid #3b82f6;border-radius:8px;padding:10px 14px;font-size:.78rem;color:#93c5fd;display:none;">
+          <i class="fas fa-info-circle"></i> Allow microphone permission when your browser asks. This lets you hear the teacher and optionally speak.
+        </div>
+        <button id="homeJoinVoiceBtn" onclick="joinHomeVoice()"
+          style="background:linear-gradient(90deg,#15803d,#22c55e);border:none;border-radius:10px;color:#fff;padding:12px 24px;font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;width:fit-content;transition:opacity .2s">
+          <i class="fas fa-phone"></i> Join Teacher Voice Channel
+        </button>
+      </div>
+    </div>
+
+    <!-- Student Writing Board -->
+    <div class="sci-panel" style="padding:0;overflow:hidden;">
+      <div style="padding:14px 20px 12px;font-size:1.1em;color:#00f3ff;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <i class="fas fa-chalkboard" style="color:#00f3ff"></i>
+        My Writing Board
+        <span style="font-size:.75rem;color:#aaa;font-weight:400">— Practice here anytime</span>
+        <span id="homeBoardAccessBadge" style="font-size:.7rem;padding:2px 10px;border-radius:999px;margin-left:auto;background:#2a1a1a;color:#f87171;border:1px solid #e53935;">🔒 View only</span>
+      </div>
+      <div id="homeBoardAccessBanner" class="tln-board-access-banner" style="margin:10px 14px 0;">
+        <i class="fas fa-lock"></i> Board writing is currently locked by your teacher.
+      </div>
+      <div id="homeBoardEnabledBanner" class="tln-board-access-banner tln-board-enabled" style="margin:10px 14px 0;display:none;">
+        <i class="fas fa-pen"></i> ✏️ Your teacher has enabled writing! You can draw on the board above.
+      </div>
+      <div id="student-board-wrap"></div>
+    </div>
+
+    <!-- AI Tutor -->
+    <div class="sci-panel" style="padding:0;overflow:hidden;">
+      <div id="ai-tutor-container"></div>
+    </div>
+
+    <div class="sci-panel">
+        <h2 class="section-header" id="academicHeaderTxt">Academic Skilling</h2>
+        <div class="app-grid">
+             <div class="app-card" onclick="nav('./TLN_FULL/icse_skilling/iscience_class_select.html')">
+                <div class="slideshow" data-imgs='["https://thelifenavigator.com/wp-content/uploads/2025/11/science_need_skilling2.png?w=1440","https://thelifenavigator.com/wp-content/uploads/2025/11/science_neet_skilling3.png?w=1440"]'></div>
+                <div class="card-label"><i class="fas fa-atom"></i> Science NEET</div>
+            </div>
+            <div class="app-card" onclick="nav('./TLN_FULL/icse_skilling/imath_class_select.html')">
+                <div class="slideshow" data-imgs='["https://thelifenavigator.com/wp-content/uploads/2025/11/mathematics_iit_skilling.png?w=1440","https://thelifenavigator.com/wp-content/uploads/2025/11/mathematics_iit_skilling2.png?w=1440"]'></div>
+                <div class="card-label"><i class="fas fa-calculator"></i> Math IIT</div>
+            </div>
+            <div class="app-card" onclick="nav('./TLN_FULL/primary_section/primary_section_home.html')">
+                <div class="slideshow" data-imgs='["https://thelifenavigator.com/wp-content/uploads/2025/11/mathematics_tables.png?w=1440","https://thelifenavigator.com/wp-content/uploads/2025/11/mathematics_tables2.png?w=1440"]'></div>
+                <div class="card-label"><i class="fas fa-shapes"></i> Tables 2 to 30</div>
+            </div>
+            <div class="app-card" onclick="nav('./TLN_FULL/iq_tests/iq&aptitude_home.html')">
+                <img src="https://thelifenavigator.com/wp-content/uploads/2025/11/iq_aptitude.png?w=1440" class="slideshow-img active">
+                <div class="card-label"><i class="fas fa-brain"></i> IQ & Aptitude</div>
+            </div>
+            <div class="app-card" onclick="nav('./TLN_FULL/english_grammar/ienglish_level_selection.html')">
+                <div class="slideshow" data-imgs='["https://thelifenavigator.com/wp-content/uploads/2025/11/english_grammar.png?w=1440","https://thelifenavigator.com/wp-content/uploads/2025/11/english_grammar3.png?w=1440"]'></div>
+                <div class="card-label"><i class="fas fa-language"></i> English Grammar</div>
+            </div>
+            <div class="app-card" onclick="window.open('https://thelifenavigator.github.io/teaching_tools/index.html','_blank')">
+                <div class="slideshow" data-imgs='["https://thelifenavigator.com/wp-content/uploads/2025/11/gamified_learning.png?w=1440","https://thelifenavigator.com/wp-content/uploads/2025/11/gamified_learning2.png?w=1440"]'></div>
+                <div class="card-label"><i class="fas fa-gamepad"></i> Gamified Tools</div>
+            </div>
+            <div class="app-card" onclick="nav('./TLN_FULL/primary_section/innovative_chapters_home2.html')">
+                <div class="slideshow" data-imgs='[
+                    "https://thelifenavigator.com/wp-content/uploads/2025/11/gemini_generated_image_fs20q2fs20q2fs20.png?w=1440",
+                    "https://thelifenavigator.com/wp-content/uploads/2025/11/gemini_generated_image_iqkvfkiqkvfkiqkv.png?w=1440",
+                    "https://thelifenavigator.com/wp-content/uploads/2025/11/gemini_generated_image_xmougaxmougaxmou.png?w=1440",
+                    "https://thelifenavigator.com/wp-content/uploads/2025/11/gemini_generated_image_mai7h7mai7h7mai7.png?w=1440",
+                    "https://thelifenavigator.com/wp-content/uploads/2025/11/gemini_generated_image_n50dz2n50dz2n50d.png?w=1440",
+                    "https://thelifenavigator.com/wp-content/uploads/2025/11/gemini_generated_image_juiwtcjuiwtcjuiw.png?w=1440"
+                ]'></div>
+                <div class="card-label"><i class="fas fa-lightbulb"></i> Primary Classes Innovative Chapters</div>
+            </div>
+          <div class="app-card" onclick="nav('./TLN_FULL/vision_home.html')">
+    <div class="slideshow" data-imgs='[
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/pd3.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/pd4.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/pd2.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/pd1.png?w=1440"
+    ]'></div>
+    <div class="card-label"><i class="fas fa-eye"></i> Personality Development Course- Limited Period Offer</div>
+</div
+        </div>
+    </div>
+
+    <div class="sci-panel">
+        <h2 class="section-header" id="psychHeaderTxt">Mental Peace</h2>
+        <div class="app-grid">
+            <div class="app-card" onclick="nav('./TLN_FULL/individual_self/parent_selfcare_english.html')">
+                <img src="https://thelifenavigator.com/wp-content/uploads/2025/11/parents_course2.png?w=1440" class="slideshow-img active">
+                <div class="card-label"><i class="fas fa-heart"></i> Parent Self Care</div>
+            </div>
+            <div class="app-card" onclick="nav('./TLN_FULL/kids/kids_mental_health_homepage.html')">
+                <div class="slideshow" data-imgs='["https://thelifenavigator.com/wp-content/uploads/2025/11/kids_mantal_health.png?w=1440","https://thelifenavigator.com/wp-content/uploads/2025/11/kids_mental_health.png?w=1440"]'></div>
+                <div class="card-label"><i class="fas fa-child"></i> Kids Mental Health</div>
+            </div>
+            <div class="app-card" onclick="nav('./TLN_FULL/language_wise_forms/Parents_course_enroll.html')">
+                <img src="https://thelifenavigator.com/wp-content/uploads/2025/11/parents_course.png?w=1440" class="slideshow-img active">
+                <div class="card-label"><i class="fas fa-users"></i> Parenting Course</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sci-panel">
+        <h2 class="section-header" id="resultHeaderTxt">Results</h2>
+        <div style="margin-bottom:20px; display:inline-flex; align-items:center; gap:10px; background:rgba(0,0,0,0.5); padding:10px; border-radius:8px; border:1px solid var(--neon-blue);">
+            <label style="margin:0;">Language:</label>
+            <select id="langSelect" style="background:#000; color:#fff; border:none; outline:none;">
+                <option value="./TLN_FULL/school_result/school_ind_result_English.html" selected>English</option>
+                <option value="./TLN_FULL/school_result/school_ind_result_Hindi.html">Hindi</option>
+              <option value="./TLN_FULL/school_result/school_ind_result_Marathi.html">Marathi</option>
+                <option value="./TLN_FULL/school_result/school_ind_result_Telugu.html">Telugu</option>
+            </select>
+        </div>
+        <div class="app-grid">
+            <div class="app-card" onclick="window.location.href = document.getElementById('langSelect').value">
+                <img src="https://thelifenavigator.com/wp-content/uploads/2025/11/school_result.png?w=1440" class="slideshow-img active">
+                <div class="card-label"><i class="fas fa-chart-line"></i> School Result</div>
+            </div>
+            <div class="app-card" onclick="nav('./TLN_FULL/skilling_result/skilling_result_anaylysis21_o1.html')">
+                <img src="https://thelifenavigator.com/wp-content/uploads/2025/11/national_olympiad.png?w=1440" class="slideshow-img active">
+                <div class="card-label"><i class="fas fa-trophy"></i> Olympiad</div>
+            </div>
+            <div class="app-card" onclick="nav('https://thelifenavigator.com/winners/')">
+                <img src="https://thelifenavigator.com/wp-content/uploads/2025/11/winners.png?w=1440" class="slideshow-img active">
+                <div class="card-label"><i class="fas fa-certificate"></i> Winners</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sci-panel">
+        <h2 class="section-header"><i class="fas fa-video"></i> Guide & Feedback</h2>
+        <div class="video-box">
+            <iframe id="videoPlayer" src="" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div style="margin-top:30px; border-top:1px solid #444; padding-top:20px;">
+            <h4 style="color:var(--neon-blue)">Feedback</h4>
+            <textarea id="commentBox" placeholder="Type here (Max 40 words)..." style="width:100%; height:80px; background:#0b111e; color:#fff; border:1px solid #333; padding:10px; border-radius:5px;"></textarea>
+            <button id="submitBtn" style="margin-top:10px; background:var(--neon-blue); color:#000; padding:10px 30px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">
+                <i class="fas fa-paper-plane"></i> Send
+            </button>
+        </div>
+    </div>
+
+    <div class="vault-section">
+        <h3 style="color:var(--neon-orange); text-align:center; font-family:'Orbitron';">Image Gallery-Scroll Them</h3>
+        <div id="galleryContainer" class="vault-container">
+            </div>
+    </div>
+  </main>
+
+  <div class="audio-widget">
+      <button id="audioToggle" class="audio-btn" title="Play/Pause"><i class="fas fa-volume-mute"></i></button>
+      <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5">
+      <audio id="bgMusic" loop>
+          <source src="https://thelifenavigator.com/wp-content/uploads/2025/05/b85fe-puzzle_music.mp3" type="audio/mpeg">
+      </audio>
+  </div>
+
+  <div id="toast-notification">
+      <div class="spinner" id="toast-spinner"></div>
+      <div id="toast-msg">Sending...</div>
+  </div>
+
+  <script>
+    // --- CONFIG ---
+    const cfg = {
+        sName: localStorage.getItem("studentName") || "Student",
+        pName: localStorage.getItem("parentName") || "Parent",
+        school: localStorage.getItem("schoolName") || "Navigator School",
+        schoolUrl: localStorage.getItem("schoolURL"),
+        quote: localStorage.getItem("quoteUrl"),
+        update: localStorage.getItem("imageUrl2"),
+        video: localStorage.getItem("videoUrl"),
+        // Message Retrieval 
+        msg1: localStorage.getItem("schoolMessage1"), // Teacher (Top)
+        msg2: localStorage.getItem("schoolMessage2")  // Mentor (Bottom)
+    };
+
+    // --- INIT ---
+    window.onload = function() {
+        // Populate Header Info
+        document.getElementById('schoolName').textContent = cfg.school;
+        document.getElementById('parentName').textContent = cfg.pName;
+        document.getElementById('studentName').textContent = cfg.sName;
+        
+        // Personalize Section Headers
+        document.getElementById('welcomeHeader').textContent = `Welcome ${cfg.pName}, Following are the Image Quotes for ${cfg.sName}`;
+        document.getElementById('academicHeaderTxt').textContent = `${cfg.pName}, conduct ${cfg.sName}'s Skilling Practice below`;
+        document.getElementById('psychHeaderTxt').textContent = `${cfg.pName}, explore mental peace customized for you`;
+        document.getElementById('resultHeaderTxt').textContent = `${cfg.pName}, check ${cfg.sName}'s Result here`;
+
+        // Images & Video
+        if(cfg.schoolUrl) { 
+            document.getElementById('schoolImageHeader').src = cfg.schoolUrl; 
+            document.getElementById('schoolImageHeader').style.display = 'block'; 
+        }
+        if(cfg.quote) document.getElementById('quoteImg').src = cfg.quote;
+        if(cfg.update) document.getElementById('dynamicImg').src = cfg.update;
+        if(cfg.video) {
+            let v = cfg.video.replace("watch?v=", "embed/");
+            document.getElementById('videoPlayer').src = v;
+        }
+
+        startClock();
+        initSlideshows();
+        initGallery();
+        initMessages(); 
+    };
+
+    // --- TOGGLE SIDEBAR ---
+    function toggleSidebar() {
+        const sb = document.getElementById('sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        sb.classList.toggle('open');
+        overlay.style.display = sb.classList.contains('open') ? 'block' : 'none';
+    }
+
+    // --- CLOCK ---
+    function startClock() {
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+    }
+
+    // --- MESSAGES LOGIC (Vertical Stack Verified) ---
+    function initMessages() {
+        const container = document.getElementById('messagesSection');
+        const tBox = document.getElementById('teacherBox');
+        const mBox = document.getElementById('mentorBox');
+
+        let hasMsg = false;
+
+        // 1. Check for Teacher Message (schoolMessage1)
+        if(cfg.msg1 && cfg.msg1.trim() !== "") {
+            tBox.style.display = 'block';
+            document.getElementById('teacherMsgText').textContent = cfg.msg1;
+            hasMsg = true;
+        }
+
+        // 2. Check for Mentor Message (schoolMessage2)
+        if(cfg.msg2 && cfg.msg2.trim() !== "") {
+            mBox.style.display = 'block';
+            document.getElementById('mentorMsgText').textContent = cfg.msg2;
+            hasMsg = true;
+        }
+
+        // 3. If either exists, show the main container (will flex-column)
+        if(hasMsg) {
+            container.style.display = 'flex';
+        }
+    }
+
+    // --- SLIDESHOWS ---
+    function initSlideshows() {
+        document.querySelectorAll('.slideshow').forEach(div => {
+            const imgs = JSON.parse(div.dataset.imgs);
+            if(!imgs || imgs.length === 0) return;
+            
+            imgs.forEach((src, i) => {
+                let img = document.createElement('img');
+                img.src = src; 
+                img.loading = "lazy"; // Optimization
+                img.className = `slideshow-img ${i===0?'active':'fading'}`;
+                div.appendChild(img);
+            });
+
+            if(imgs.length > 1) {
+                let idx = 0;
+                const domImgs = div.querySelectorAll('img');
+                setInterval(() => {
+                    domImgs[idx].className = 'slideshow-img fading';
+                    idx = (idx + 1) % domImgs.length;
+                    domImgs[idx].className = 'slideshow-img active';
+                }, 3500);
+            }
+        });
+    }
+
+    // --- GALLERY (Optimized with Lazy Loading) ---
+    function initGallery() {
+        const urls = [
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/science_need_skilling2.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/science_neet_skilling3.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/mathematics_iit_skilling.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/mathematics_iit_skilling2.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/mathematics_tables.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/mathematics_tables2.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/iq_aptitude.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/english_grammar.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/english_grammar3.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/engllish_grammar2.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/gamified_learning.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/gamified_learning2.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/parents_course2.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/kids_mantal_health.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/kids_mental_health.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/parents_course.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/school_result.png?w=1440",
+        "https://thelifenavigator.com/wp-content/uploads/2025/11/national_olympiad.png?w=1440"
+        ];
+        const track = document.getElementById('galleryContainer');
+        urls.forEach(src => {
+            let d = document.createElement('div');
+            d.className = 'vault-item';
+            // Added loading="lazy" here to prevent page slowdown
+            d.innerHTML = `<img src="${src}" loading="lazy">`;
+            track.appendChild(d);
+        });
+    }
+
+    // --- COMMENT SYSTEM ---
+    document.getElementById('submitBtn').addEventListener('click', function() {
+        const txt = document.getElementById('commentBox').value.trim();
+        if(!txt || txt.split(/\s+/).length > 40) { alert('Max 40 words required.'); return; }
+
+        const toast = document.getElementById('toast-notification');
+        const spinner = document.getElementById('toast-spinner');
+        const msg = document.getElementById('toast-msg');
+        
+        toast.style.display = 'flex';
+        toast.style.borderLeftColor = 'var(--neon-blue)';
+        spinner.style.display = 'block';
+        msg.textContent = "Sending...";
+
+        const formData = new FormData();
+        formData.append('username', cfg.sName);
+        formData.append('commentBox', txt);
+
+        fetch('https://script.google.com/macros/s/AKfycbxciYsOSxiKN2k9FWMdFuqpt5OKkp6EDsSp2xPmfZcGARVAXWdhbQTIYHabMygnRhk/exec', {
+            method: 'POST', body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            spinner.style.display = 'none';
+            if(data.result === 'success') {
+                toast.style.borderLeftColor = '#0aff0a';
+                msg.textContent = "Sent Successfully!";
+                document.getElementById('commentBox').value = "";
+                setTimeout(() => { toast.style.display = 'none'; }, 3000);
+            } else {
+                toast.style.borderLeftColor = 'red';
+                msg.textContent = "Failed.";
+            }
+        })
+        .catch(err => {
+            spinner.style.display = 'none';
+            msg.textContent = "Error.";
+        });
+    });
+
+    // --- AUDIO PLAYER LOGIC ---
+    const music = document.getElementById('bgMusic');
+    const toggleBtn = document.getElementById('audioToggle');
+    const icon = toggleBtn.querySelector('i');
+    const slider = document.getElementById('volumeSlider');
+
+    // Set initial volume
+    music.volume = 0.5;
+
+    // Toggle Play/Pause
+    toggleBtn.addEventListener('click', () => {
+        if (music.paused) {
+            music.play().then(() => {
+                icon.classList.remove('fa-volume-mute');
+                icon.classList.add('fa-volume-up');
+                toggleBtn.style.color = 'var(--neon-green)';
+            }).catch(e => console.log("Audio play failed:", e));
+        } else {
+            music.pause();
+            icon.classList.remove('fa-volume-up');
+            icon.classList.add('fa-volume-mute');
+            toggleBtn.style.color = 'var(--neon-blue)';
+        }
+    });
+
+    // Volume Slider
+    slider.addEventListener('input', (e) => {
+        music.volume = e.target.value;
+        // Update icon if volume hits 0
+        if(music.volume == 0) {
+             icon.className = 'fas fa-volume-off';
+        } else if (!music.paused) {
+             icon.className = 'fas fa-volume-up';
+        }
+    });
+
+    // Utils
+    function nav(url) { window.location.href = url; }
+    document.getElementById('logoutBtnSide').addEventListener('click', () => {
+         if(confirm('Logout?')) { localStorage.clear(); window.location.replace('https://neet-f77i.onrender.com'); }
+    });
+  </script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  TLN HOME — Ticker + Live Alert + Voice + Board Access
+// ═══════════════════════════════════════════════════════════════
+const _GAS = 'https://script.google.com/macros/s/AKfycbyvp23o6bpUWHzc-jtl_hcQCs7I1jj3doD_G-WLTWQ-2f0hPp4hXcNGffJ0uxDLSkT5/exec';
+const _CLS = localStorage.getItem('className') || '';
+const _UID = localStorage.getItem('userId')    || '';
+const _UNAME = localStorage.getItem('studentName') || 'Student';
+
+async function _post(params) {
+  const body = Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+  const r = await fetch(_GAS, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+  return r.json();
+}
+
+// ── TICKER + LIVE ROOM CODE ─────────────────────────────────────────────────
+let _currentLiveRoom = '';
+
+async function pollTickerAndLive() {
+  try {
+    const data = await _post({ action:'get_ticker', class_name:_CLS });
+
+    // Ticker messages
+    const msgs   = data.messages || [];
+    const ticker = document.getElementById('tlnTicker');
+    const txt    = document.getElementById('tlnTickerText');
+    if (msgs.length > 0 && ticker && txt) {
+      const full = msgs.join('   ·   ');
+      txt.textContent  = full + '   ·   ' + full; // double for seamless loop
+      ticker.style.display = 'block';
+    } else if (ticker) {
+      ticker.style.display = 'none';
+    }
+
+    // Live room code
+    const liveRoom = data.live_room_id || '';
+    const liveBar  = document.getElementById('tlnLiveBar');
+    const liveTitle= document.getElementById('tlnLiveTitle');
+    const liveSub  = document.getElementById('tlnLiveSub');
+    if (liveRoom && liveBar) {
+      const wasLive    = !!_currentLiveRoom;
+      _currentLiveRoom = liveRoom;
+      _homeVoiceRoom   = liveRoom; // keep voice room in sync
+      liveBar.style.display = 'flex';
+      if (liveTitle) liveTitle.textContent = '🎬 Live Class: ' + liveRoom;
+      if (liveSub)   liveSub.textContent   = 'Room code: ' + liveRoom + ' · Tap to join';
+      // Update join button
+      const btn = document.getElementById('homeJoinVoiceBtn');
+      if (btn && !_homeVoiceOn) {
+        btn.style.background = 'linear-gradient(90deg,#e53935,#ef4444)';
+        btn.innerHTML = '<i class="fas fa-phone"></i> 🔴 Teacher LIVE — Join Voice Now!';
+      }
+      // Auto-start screen receive with updated room
+      if (!wasLive) { startHomeScreenReceive(); }
+    } else if (liveBar) {
+      liveBar.style.display = 'none';
+      _currentLiveRoom = '';
+      // Reset join button
+      const btn2 = document.getElementById('homeJoinVoiceBtn');
+      if (btn2 && !_homeVoiceOn) {
+        btn2.style.background = 'linear-gradient(90deg,#15803d,#22c55e)';
+        btn2.innerHTML = '<i class="fas fa-phone"></i> Join Teacher Voice Channel';
+        btn2.style.animation = '';
+      }
+    }
+
+    // Board write access
+    const writeEnabled = data.write_enabled;
+    const badge   = document.getElementById('homeBoardAccessBadge');
+    const banner  = document.getElementById('homeBoardAccessBanner');
+    const enBanner= document.getElementById('homeBoardEnabledBanner');
+    if (badge) {
+      badge.innerHTML = writeEnabled ? '✏️ Writing enabled' : '🔒 View only';
+      badge.style.background = writeEnabled ? '#1a3a2a' : '#2a1a1a';
+      badge.style.color      = writeEnabled ? '#4ade80' : '#f87171';
+      badge.style.borderColor= writeEnabled ? '#22c55e' : '#e53935';
+    }
+    if (banner)   banner.style.display   = writeEnabled ? 'none'  : 'flex';
+    if (enBanner) enBanner.style.display = writeEnabled ? 'flex'  : 'none';
+    // Update board lock state in whiteboard
+    if (window.TLNBoard && TLNBoard._states['student-board-wrap']) {
+      if (writeEnabled) TLNBoard.allowWrite('student-board-wrap');
+      else TLNBoard.lockWrite('student-board-wrap');
+    }
+
+  } catch(e) {}
+}
+
+function joinLiveFromHome() {
+  if (_currentLiveRoom) {
+    localStorage.setItem('liveRoomId',    _currentLiveRoom);
+    localStorage.setItem('liveRoomTitle', _currentLiveRoom);
+    localStorage.setItem('lastLiveRoom',  _currentLiveRoom);
+    window.location.href = './classroom.html';
+  } else {
+    window.location.href = './live_home.html';
+  }
+}
+
+// ── WEBRTC VOICE (Homepage — student side) ──────────────────────────────────
+let _homeStream    = null;
+let _homePCs       = {};
+let _homeVoiceOn   = false;
+let _homeMicMuted  = false;
+let _homeAudioCtx  = null;
+let _homeVoiceRoom = '';
+let _homePollTimer = null;
+
+const ICE_CFG = [
+  { urls:'stun:stun.l.google.com:19302' },
+  { urls:'stun:stun1.l.google.com:19302' }
+];
+const POLL_MS = 2500;
+
+function _homeVoiceStatus(msg, col) {
+  const el = document.getElementById('homeVoiceStatus');
+  if (el) { el.textContent = msg; el.style.color = col || '#8b949e'; }
+}
+
+async function joinHomeVoice() {
+  if (_homeVoiceOn) return;
+  const permNotice = document.getElementById('homePermNotice');
+  if (permNotice) permNotice.style.display = 'block';
+
+  // Use the current live room or class-specific room
+  _homeVoiceRoom = _currentLiveRoom || ('home-' + _CLS);
+
+  try {
+    _homeStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl:  true,
+        sampleRate: 48000,
+        channelCount: 1
+      },
+      video: false
+    });
+    if (permNotice) permNotice.style.display = 'none';
+    _homeVoiceOn = true;
+
+    // Update UI
+    document.getElementById('homeVoiceJoinArea').style.display = 'none';
+    document.getElementById('homeVoiceBar').classList.add('active');
+    _homeVoiceStatus('Listening · ' + _UNAME, '#4ade80');
+
+    // Register
+    await _post({ action:'voice_join', room_id:_homeVoiceRoom, peer_id:_UID, peer_name:_UNAME });
+
+    // Start polling for teacher
+    _homePollTimer = setInterval(_homePollPeers, POLL_MS);
+    _homeMonitorMic(_UID, _homeStream);
+
+  } catch(err) {
+    if (permNotice) permNotice.style.display = 'none';
+    _homeVoiceStatus('Mic permission denied — allow in browser settings', '#f87171');
+    document.getElementById('homePermNotice').style.display = 'block';
+    document.getElementById('homePermNotice').innerHTML =
+      '<i class="fas fa-exclamation-triangle"></i> Microphone access was denied. Go to your browser settings and allow microphone for this site, then reload.';
+  }
+}
+
+async function _homePollPeers() {
+  try {
+    const data = await _post({ action:'voice_peers', room_id:_homeVoiceRoom, peer_id:_UID });
+    const peers = data.peers || [];
+    peers.forEach(p => {
+      if (!_homePCs[p.id]) _homeCreatePC(p.id, p.name, true);
+    });
+    // Remove disconnected
+    Object.keys(_homePCs).forEach(pid => {
+      if (!peers.find(p=>p.id===pid)) _homeRemovePC(pid);
+    });
+  } catch(e) {}
+}
+
+function _homeCreatePC(peerId, peerName, initiator) {
+  if (_homePCs[peerId]) return;
+  const pc = new RTCPeerConnection({ iceServers:ICE_CFG });
+  _homePCs[peerId] = pc;
+
+  if (_homeStream) _homeStream.getTracks().forEach(t=>pc.addTrack(t,_homeStream));
+
+  pc.ontrack = (e) => {
+    const stream = e.streams[0];
+    // Create audio element for teacher's voice
+    let audioEl = document.getElementById('home-audio-'+peerId);
+    if (!audioEl) {
+      audioEl = document.createElement('audio');
+      audioEl.id       = 'home-audio-'+peerId;
+      audioEl.autoplay = true;
+      audioEl.controls = false; // invisible — just plays
+      document.body.appendChild(audioEl);
+    }
+    audioEl.srcObject = stream;
+    _homeVoiceStatus('🎤 ' + peerName + ' is speaking', '#4ade80');
+    _homeMonitorMic(peerId, stream);
+  };
+
+  pc.onicecandidate = async(e) => {
+    if (e.candidate) {
+      await _post({ action:'voice_signal', room_id:_homeVoiceRoom, from_id:_UID, to_id:peerId, type:'ice', payload:JSON.stringify(e.candidate) });
+    }
+  };
+
+  if (initiator) {
+    pc.createOffer().then(offer => {
+      pc.setLocalDescription(offer);
+      _post({ action:'voice_signal', room_id:_homeVoiceRoom, from_id:_UID, to_id:peerId, type:'offer', payload:JSON.stringify(offer) });
+    });
+  }
+
+  // Poll for signals from this peer
+  const sigPoll = setInterval(async() => {
+    if (!_homePCs[peerId]) { clearInterval(sigPoll); return; }
+    try {
+      const d = await _post({ action:'voice_get_signals', room_id:_homeVoiceRoom, for_id:_UID, from_id:peerId });
+      for (const sig of (d.signals||[])) {
+        const payload = JSON.parse(sig.payload);
+        if (sig.type==='offer') {
+          await pc.setRemoteDescription(new RTCSessionDescription(payload));
+          const ans = await pc.createAnswer();
+          await pc.setLocalDescription(ans);
+          await _post({ action:'voice_signal', room_id:_homeVoiceRoom, from_id:_UID, to_id:peerId, type:'answer', payload:JSON.stringify(ans) });
+        } else if (sig.type==='answer' && pc.signalingState!=='stable') {
+          await pc.setRemoteDescription(new RTCSessionDescription(payload));
+        } else if (sig.type==='ice') {
+          try { await pc.addIceCandidate(new RTCIceCandidate(payload)); } catch(e){}
+        }
+      }
+    } catch(e){}
+  }, POLL_MS);
+}
+
+function _homeRemovePC(peerId) {
+  if (_homePCs[peerId]) { _homePCs[peerId].close(); delete _homePCs[peerId]; }
+  document.getElementById('home-audio-'+peerId)?.remove();
+}
+
+function _homeMonitorMic(peerId, stream) {
+  try {
+    if (!_homeAudioCtx) _homeAudioCtx = new AudioContext();
+    const src = _homeAudioCtx.createMediaStreamSource(stream);
+    const an  = _homeAudioCtx.createAnalyser();
+    an.fftSize = 256;
+    src.connect(an);
+    const buf = new Uint8Array(an.frequencyBinCount);
+    const tick = () => {
+      if (!_homeVoiceOn && peerId===_UID) return;
+      an.getByteFrequencyData(buf);
+      const vol = buf.reduce((a,b)=>a+b,0)/buf.length;
+      // Update volume bar (for own mic when speaking)
+      if (peerId === _UID || Object.keys(_homePCs).length === 0) {
+        const fill = document.getElementById('homeVolFill');
+        if (fill) fill.style.width = Math.min(100,vol*2)+'%';
+        const ring = document.getElementById('homeVolRing');
+        if (ring) ring.classList.toggle('speaking', vol>12);
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
+  } catch(e){}
+}
+
+function toggleHomeVoiceMic() {
+  _homeMicMuted = !_homeMicMuted;
+  if (_homeStream) _homeStream.getAudioTracks().forEach(t=>t.enabled=!_homeMicMuted);
+  const btn  = document.getElementById('homeVoiceMuteBtn');
+  const icon = document.getElementById('homeVoiceMicIcon');
+  if (btn)  btn.style.background  = _homeMicMuted?'#2a1a1a':'#1a3a2a';
+  if (btn)  btn.style.borderColor = _homeMicMuted?'#e53935':'#22c55e';
+  if (btn)  btn.style.color       = _homeMicMuted?'#f87171':'#4ade80';
+  if (icon) icon.className        = _homeMicMuted?'fas fa-microphone-slash':'fas fa-microphone';
+  _post({ action:'voice_mute', room_id:_homeVoiceRoom, peer_id:_UID, muted:_homeMicMuted?'1':'0' });
+}
+
+function leaveHomeVoice() {
+  _homeVoiceOn = false;
+  if (_homePollTimer) clearInterval(_homePollTimer);
+  Object.keys(_homePCs).forEach(_homeRemovePC);
+  if (_homeStream) { _homeStream.getTracks().forEach(t=>t.stop()); _homeStream=null; }
+  _post({ action:'voice_leave', room_id:_homeVoiceRoom, peer_id:_UID });
+  document.getElementById('homeVoiceJoinArea').style.display = 'flex';
+  document.getElementById('homeVoiceBar').classList.remove('active');
+  _homeVoiceStatus('Disconnected');
+}
+
+// ── AUTO-ASK PERMISSIONS on page load ──────────────────────────────────────
+// We ask permissions early so browser doesn't block mid-class
+async function requestPermissionsEarly() {
+  try {
+    // Try just mic+speaker check — don't actually start streaming yet
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const hasMic  = devices.some(d=>d.kind==='audioinput');
+    const hasSpeaker = devices.some(d=>d.kind==='audiooutput');
+    if (hasMic) {
+      // Show voice join button as pulsing if live class detected
+      const btn = document.getElementById('homeJoinVoiceBtn');
+      if (btn && _currentLiveRoom) btn.style.animation = 'livepulse 1.5s ease-in-out infinite';
+    }
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SCREEN SHARE RECEIVER (student homepage)
+// ═══════════════════════════════════════════════════════════════════
+let _hScreenPC      = null;
+let _hScreenPoll    = null;
+let _hReceivingScr  = false;
+const _SCREEN_ROOM  = (_CLS || 'home') + '-screen';
+const _MY_SCR_ID    = _UID + '_home_recv';
+const _ICE          = [{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}];
+
+async function startHomeScreenReceive() {
+  if (_hReceivingScr) return;
+  _hReceivingScr = true;
+  await _post({ action:'voice_join', room_id:_SCREEN_ROOM, peer_id:_MY_SCR_ID, peer_name:_UNAME });
+
+  _hScreenPoll = setInterval(async () => {
+    try {
+      const d = await _post({ action:'voice_peers', room_id:_SCREEN_ROOM, peer_id:_MY_SCR_ID });
+      const teacher = (d.peers||[]).find(p => p.id.endsWith('_screen') && !p.id.includes('recv'));
+      if (teacher && !_hScreenPC) _hConnectScreen(teacher.id);
+      else if (!teacher && _hScreenPC) _hStopScreen();
+    } catch(e) {}
+  }, 3000);
+}
+
+function _hConnectScreen(teacherScreenId) {
+  if (_hScreenPC) return;
+  const pc = new RTCPeerConnection({ iceServers: _ICE });
+  _hScreenPC = pc;
+
+  pc.ontrack = (e) => {
+    const vid   = document.getElementById('homeScreenVideo');
+    const panel = document.getElementById('homeScreenPanel');
+    if (vid)   vid.srcObject   = e.streams[0];
+    if (panel) panel.style.display = 'block';
+  };
+
+  pc.onicecandidate = async (e) => {
+    if (e.candidate) await _post({ action:'voice_signal', room_id:_SCREEN_ROOM, from_id:_MY_SCR_ID, to_id:teacherScreenId, type:'ice', payload:JSON.stringify(e.candidate) });
+  };
+
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState==='disconnected'||pc.connectionState==='failed') _hStopScreen();
+  };
+
+  const sp = setInterval(async () => {
+    if (!_hScreenPC) { clearInterval(sp); return; }
+    try {
+      const d = await _post({ action:'voice_get_signals', room_id:_SCREEN_ROOM, for_id:_MY_SCR_ID, from_id:teacherScreenId });
+      for (const sig of (d.signals||[])) {
+        const pl = JSON.parse(sig.payload);
+        if (sig.type==='offer') {
+          await pc.setRemoteDescription(new RTCSessionDescription(pl));
+          const ans = await pc.createAnswer();
+          await pc.setLocalDescription(ans);
+          await _post({ action:'voice_signal', room_id:_SCREEN_ROOM, from_id:_MY_SCR_ID, to_id:teacherScreenId, type:'answer', payload:JSON.stringify(ans) });
+        } else if (sig.type==='ice') {
+          try { await pc.addIceCandidate(new RTCIceCandidate(pl)); } catch(e){}
+        }
+      }
+    } catch(e) {}
+  }, 2000);
+}
+
+function _hStopScreen() {
+  _hReceivingScr = false;
+  if (_hScreenPoll) clearInterval(_hScreenPoll);
+  if (_hScreenPC) { _hScreenPC.close(); _hScreenPC = null; }
+  const panel = document.getElementById('homeScreenPanel');
+  if (panel) panel.style.display = 'none';
+}
+
+function toggleHomeScreenFullscreen() {
+  const vid = document.getElementById('homeScreenVideo');
+  if (vid && vid.requestFullscreen) vid.requestFullscreen();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  LIVE BOARD VIEWER on Homepage (polls board snapshot from GAS)
+// ═══════════════════════════════════════════════════════════════════
+let _lastHomeBoard = '';
+
+async function pollHomeLiveBoard() {
+  // Poll board if there's a live class OR last known room
+  const room = _currentLiveRoom || localStorage.getItem('lastLiveRoom') || '';
+  if (!room) return;
+  // Override roomId for this function
+  const origRoom = _currentLiveRoom;
+  _currentLiveRoom = room;
+  try {
+    const data = await _post({ action:'get_board', room_id:_currentLiveRoom });
+    if (data.ok && data.board && data.board !== _lastHomeBoard) {
+      _lastHomeBoard = data.board;
+      // Draw on student's homepage board
+      if (window.TLNBoard && TLNBoard._states['student-board-wrap']) {
+        const s   = TLNBoard._states['student-board-wrap'];
+        const img = new Image();
+        img.onload = () => {
+          const dpr = window.devicePixelRatio||1;
+          s.ctx.clearRect(0,0,s.canvas.width,s.canvas.height);
+          s.ctx.drawImage(img,0,0,s.canvas.width/dpr,s.canvas.height/dpr);
+        };
+        img.src = data.board;
+        // Show badge that board is live from teacher
+        const badge = document.getElementById('homeBoardAccessBadge');
+        if (badge) { badge.innerHTML='📡 Teacher board — Live'; badge.style.background='#0d3a6e'; badge.style.color='#60a5fa'; badge.style.borderColor='#3b82f6'; }
+      }
+    }
+  } catch(e) {}
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+(function initHome() {
+  pollTickerAndLive();
+  setInterval(pollTickerAndLive, 15000);
+  setTimeout(requestPermissionsEarly, 2000);
+  setTimeout(startHomeScreenReceive, 3000);
+  setInterval(pollHomeLiveBoard, 4000);
+
+  // Auto-join voice when live class becomes active
+  // Re-check every 20s — if live room appears and we haven't joined, auto-prompt
+  setInterval(function() {
+    if (_currentLiveRoom && !_homeVoiceOn) {
+      // Pulse the join button to attract attention
+      const btn = document.getElementById('homeJoinVoiceBtn');
+      if (btn) {
+        btn.style.background = 'linear-gradient(90deg,#e53935,#ef4444)';
+        btn.innerHTML = '<i class="fas fa-phone"></i> 🔴 Teacher is LIVE — Join Voice Now!';
+        btn.style.animation = 'livepulse 1s ease-in-out infinite';
+      }
+      // Update screen receive room
+      _homeVoiceRoom = _currentLiveRoom;
+    }
+  }, 20000);
+})();
+
+// ── Show portal buttons based on role
+  (function() {
+    var cls = localStorage.getItem("className") || "";
+    var uid = localStorage.getItem("userId") || "";
+    if (cls === "Teachers") {
+      var tBtns = [document.getElementById("teacherPortalBtn"), document.getElementById("sideTeacherBtn")];
+      tBtns.forEach(function(b){ if(b) b.style.display = "flex"; });
+      var lbl = document.getElementById("roleLabel");
+      if(lbl) lbl.textContent = "Teacher";
+    }
+    if (cls === "Principal" || uid === "admin") {
+      var aBtns = [document.getElementById("adminPortalBtn"), document.getElementById("sideAdminBtn"),
+                   document.getElementById("teacherPortalBtn"), document.getElementById("sideTeacherBtn")];
+      aBtns.forEach(function(b){ if(b) b.style.display = "flex"; });
+      var lbl2 = document.getElementById("roleLabel");
+      if(lbl2) lbl2.textContent = "Admin";
+    }
+  })();
+
+  // Init student writing board — mobile responsive
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      var boardWrap = document.getElementById('student-board-wrap');
+      if (boardWrap && window.TLNBoard) {
+        TLNBoard.init('student-board-wrap', {
+          role: 'student',
+          userName: localStorage.getItem('studentName') || 'Student'
+        });
+      }
+      // Init AI Tutor
+      if (window.TLNTutor) {
+        TLNTutor.inject('ai-tutor-container');
+      }
+      // Load teacher info + check live classes
+      loadTeacherInfo();
+      checkLiveClasses();
+      setInterval(checkLiveClasses, 20000); // recheck every 20s
+    }, 600);
+  });
+
+  // Check for live classes and show alert on homepage
+  function checkLiveClasses() {
+    var cls     = localStorage.getItem('className') || '';
+    var GAS_URL = 'https://script.google.com/macros/s/AKfycbyvp23o6bpUWHzc-jtl_hcQCs7I1jj3doD_G-WLTWQ-2f0hPp4hXcNGffJ0uxDLSkT5/exec';
+    fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=live_schedule&class=' + encodeURIComponent(cls)
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var classes = d.classes || [];
+      var now     = Date.now();
+      var live    = classes.filter(function(c){
+        var st = (c.status||'').toLowerCase();
+        if (st === 'live') return true;
+        if (st === 'ended') return false;
+        var start = new Date(c.scheduled_time).getTime();
+        var diff  = (start - now) / 60000;
+        return diff < 15 && diff > -180;
+      });
+      var alertEl = document.getElementById('homeLiveAlert');
+      var titleEl = document.getElementById('homeLiveTitle');
+      if (!alertEl) return;
+      if (live.length > 0) {
+        alertEl.style.display = 'flex';
+        if (titleEl) titleEl.textContent = live[0].title + ' is LIVE now!';
+      } else {
+        alertEl.style.display = 'none';
+      }
+    })
+    .catch(function(){});
+  }
+
+  function loadTeacherInfo() {
+    var cls = localStorage.getItem('className') || '';
+    var sid = localStorage.getItem('userId') || '';
+    if (!cls || !sid) return;
+
+    var GAS_URL = 'https://script.google.com/macros/s/AKfycbyvp23o6bpUWHzc-jtl_hcQCs7I1jj3doD_G-WLTWQ-2f0hPp4hXcNGffJ0uxDLSkT5/exec';
+
+    fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=get_teacher_for_class&class=' + encodeURIComponent(cls)
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.ok && data.teacher) {
+        var t = data.teacher;
+        var panel = document.getElementById('teacherInfoPanel');
+        var av    = document.getElementById('teacherAvatar');
+        var name  = document.getElementById('teacherNameDisplay');
+        var cls2  = document.getElementById('teacherClassDisplay');
+        var school= document.getElementById('teacherSchoolDisplay');
+        if (!panel) return;
+        panel.style.display = 'block';
+        name.textContent   = t.name   || 'Your Teacher';
+        cls2.textContent   = 'Classes: ' + [t.classK, t.classL, t.classM].filter(Boolean).join(', ');
+        school.textContent = t.school || '';
+        av.textContent     = (t.name || 'T').charAt(0).toUpperCase();
+      }
+    })
+    .catch(function(){});
+  }
+
+  function tlnLogout() {
+    if (confirm("Are you sure you want to logout?")) {
+      localStorage.clear();
+      window.location.replace("./login.html");
+    }
+  }
+</script>
+</body>
+</html>

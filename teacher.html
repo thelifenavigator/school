@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Portal — The Life Navigator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="./assets/js/whiteboard.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Poppins',sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh}
+    .topbar{background:linear-gradient(90deg,#0d47a1,#1565c0);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+    .topbar h1{font-family:'Orbitron',sans-serif;font-size:.95rem;letter-spacing:2px;color:#fff}
+    .tb-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;padding:7px 14px;font-size:.8rem;cursor:pointer;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:6px}
+    .tb-btn.danger{background:#c62828;border-color:#c62828}
+    .layout{display:flex;min-height:calc(100vh - 54px)}
+    .sidebar{width:220px;flex-shrink:0;background:#161b22;border-right:1px solid #30363d;padding:20px 0}
+    .nav-item{padding:12px 20px;font-size:.85rem;cursor:pointer;display:flex;align-items:center;gap:10px;color:#8b949e;border-left:3px solid transparent;transition:all .15s}
+    .nav-item:hover{background:#21262d;color:#e6edf3}
+    .nav-item.active{background:#21262d;color:#60a5fa;border-left-color:#60a5fa}
+    .main{flex:1;padding:24px;overflow-y:auto}
+    .section-title{font-size:1rem;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:10px;color:#60a5fa}
+    .card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;margin-bottom:16px}
+    .card-title{font-size:.8rem;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .class-pills{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+    .class-pill{padding:7px 16px;border-radius:999px;border:2px solid #3b82f6;color:#60a5fa;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;background:#1a2a4a}
+    .class-pill:hover,.class-pill.active{background:#3b82f6;color:#fff}
+    .tbl{width:100%;border-collapse:collapse;font-size:.82rem}
+    .tbl th{padding:9px 12px;text-align:left;font-size:.7rem;color:#8b949e;text-transform:uppercase;border-bottom:1px solid #30363d}
+    .tbl td{padding:9px 12px;border-bottom:1px solid #21262d;vertical-align:middle}
+    .tbl tr:hover td{background:#21262d}
+    .field-group{margin-bottom:12px}
+    .field-group label{display:block;font-size:.72rem;color:#8b949e;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+    .field-group input,.field-group select,.field-group textarea{width:100%;padding:10px 12px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-family:'Poppins',sans-serif;font-size:.85rem;outline:none}
+    .field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:#3b82f6}
+    .field-group textarea{resize:vertical;min-height:70px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+    .form-row.three{grid-template-columns:1fr 1fr 1fr}
+    .btn{padding:9px 18px;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:opacity .2s;display:inline-flex;align-items:center;gap:7px}
+    .btn:hover{opacity:.85}
+    .btn-blue{background:linear-gradient(90deg,#1d4ed8,#3b82f6);color:#fff}
+    .btn-green{background:linear-gradient(90deg,#15803d,#22c55e);color:#fff}
+    .btn-amber{background:linear-gradient(90deg,#b45309,#f59e0b);color:#fff}
+    .btn-red{background:linear-gradient(90deg,#b91c1c,#ef4444);color:#fff}
+    .btn-sm{padding:5px 11px;font-size:.75rem}
+    .page{display:none}.page.active{display:block}
+    .status-msg{padding:10px 14px;border-radius:8px;font-size:.82rem;margin-bottom:14px;display:none}
+    .status-msg.success{background:#1a3a2a;color:#4ade80;border:1px solid #22c55e;display:block}
+    .status-msg.error{background:#3a1a1a;color:#f87171;border:1px solid #e53935;display:block}
+    .spin{width:18px;height:18px;border:2px solid #30363d;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .live-card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;transition:background .15s}
+    .live-card:hover{background:#1a2030}
+    .live-card-info{flex:1;min-width:0}
+    .live-card-title{font-weight:600;font-size:.9rem;color:#e6edf3}
+    .live-card-sub{font-size:.75rem;color:#8b949e;margin-top:3px}
+    .live-card-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:.68rem;font-weight:700}
+    .badge-live{background:#2a1a1a;color:#f87171;border:1px solid #e53935}
+    .badge-upcoming{background:#1a2a4a;color:#60a5fa;border:1px solid #3b82f6}
+    .badge-ended{background:#21262d;color:#6b7280;border:1px solid #30363d}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:#e53935;animation:pulse 1.4s ease-in-out infinite;display:inline-block}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+    /* Students */
+    .student-row-selected{background:#1a2a4a !important}
+    .write-toggle{cursor:pointer;font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #30363d;color:#8b949e;background:#0d1117;transition:all .15s;white-space:nowrap}
+    .write-toggle.on{background:#1a3a2a;color:#4ade80;border-color:#22c55e}
+    /* Attendance monitor */
+    .monitor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+    .monitor-tile{background:#21262d;border:1px solid #30363d;border-radius:10px;padding:10px;text-align:center;position:relative;transition:border-color .2s}
+    .monitor-tile.alert{border-color:#e53935;background:#2a1a1a}
+    .monitor-tile.present{border-color:#22c55e}
+    .monitor-av{width:44px;height:44px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:#fff}
+    .monitor-name{font-size:.75rem;font-weight:600;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .monitor-status{font-size:.65rem;margin-top:4px}
+    .monitor-alert-badge{position:absolute;top:6px;right:6px;background:#e53935;color:#fff;font-size:.6rem;padding:1px 5px;border-radius:999px;font-weight:700}
+    /* Inbox-style alert log */
+    .alert-log{max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+    .alert-item{background:#2a1a1a;border:1px solid #e53935;border-radius:7px;padding:8px 12px;font-size:.75rem;color:#f87171;display:flex;align-items:center;gap:8px}
+    .alert-item i{flex-shrink:0}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <h1>📚 TEACHER PORTAL — THE LIFE NAVIGATOR</h1>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <span id="teacherInfo" style="font-size:.78rem;color:#93c5fd"></span>
+    <button class="tb-btn danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="nav-item active" onclick="showPage('myclasses')"><i class="fas fa-graduation-cap"></i> My Classes</div>
+    <div class="nav-item" onclick="showPage('students')"><i class="fas fa-users"></i> Students</div>
+    <div class="nav-item" onclick="showPage('message')"><i class="fas fa-comment-dots"></i> Send Message</div>
+    <div class="nav-item" onclick="showPage('video')"><i class="fas fa-video"></i> Push Video</div>
+    <div class="nav-item" onclick="showPage('liveclass')"><i class="fas fa-satellite-dish"></i> Live Class</div>
+    <div class="nav-item" onclick="showPage('broadcast')"><i class="fas fa-broadcast-tower"></i> Broadcast</div>
+    <div class="nav-item" onclick="showPage('monitor')"><i class="fas fa-eye"></i> Monitor</div>
+  </div>
+
+  <div class="main">
+
+    <!-- MY CLASSES -->
+    <div class="page active" id="page-myclasses">
+      <div class="section-title"><i class="fas fa-graduation-cap"></i> My Allotted Classes</div>
+      <div class="card" id="allotBannerCard">
+        <div id="allotBanner" style="font-size:.85rem;color:#8b949e">Loading your classes…</div>
+      </div>
+      <div class="class-pills" id="classPills"></div>
+      <div class="card" id="classDetailCard" style="display:none">
+        <div class="card-title" id="classDetailTitle">Students</div>
+        <div id="classDetailContent"></div>
+      </div>
+    </div>
+
+    <!-- STUDENTS -->
+    <div class="page" id="page-students">
+      <div class="section-title"><i class="fas fa-users"></i> Students</div>
+      <div class="class-pills" id="studentClassPills"></div>
+      <div class="card" style="padding:12px 16px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <input type="text" id="studentSearch" placeholder="🔍 Search name or roll…" oninput="filterStudents()"
+            style="flex:1;min-width:140px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;padding:8px 12px;font-family:'Poppins',sans-serif;font-size:.82rem;outline:none">
+          <button class="btn btn-blue btn-sm" onclick="selectAllStudents()"><i class="fas fa-check-square"></i> All</button>
+          <button class="btn btn-sm" style="background:#21262d;color:#e6edf3;border:1px solid #30363d" onclick="clearSelection()"><i class="fas fa-square"></i> None</button>
+          <span id="selectedCount" style="font-size:.75rem;color:#8b949e">0 selected</span>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden"><div id="studentTableWrap" style="padding:14px">Select a class above.</div></div>
+      <div class="card" id="selectionActions" style="display:none">
+        <div class="card-title">Actions for <span id="selCount2">0</span> selected students</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-blue" onclick="showMsgToSelected()"><i class="fas fa-comment-dots"></i> Message</button>
+          <button class="btn btn-green" onclick="showVideoToSelected()"><i class="fas fa-video"></i> Video Link</button>
+        </div>
+        <div id="selMsgBox" style="display:none;margin-top:14px">
+          <div class="form-row">
+            <div class="field-group"><label>Column</label>
+              <select id="selMsgCol"><option value="N">Teacher's Message (N)</option><option value="O">Mentor's Message (O)</option></select>
+            </div>
+          </div>
+          <div class="field-group"><label>Message</label><textarea id="selMsgText" placeholder="Type message…"></textarea></div>
+          <button class="btn btn-blue" onclick="sendMsgToSelected()"><i class="fas fa-paper-plane"></i> Send</button>
+        </div>
+        <div id="selVidBox" style="display:none;margin-top:14px">
+          <div class="form-row">
+            <div class="field-group"><label>Title</label><input type="text" id="selVidTitle" placeholder="Video title"></div>
+            <div class="field-group"><label>URL</label><input type="url" id="selVidUrl" placeholder="https://youtube.com/…"></div>
+          </div>
+          <button class="btn btn-green" onclick="sendVidToSelected()"><i class="fas fa-upload"></i> Push</button>
+        </div>
+        <div id="selActionStatus" class="status-msg" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <!-- SEND MESSAGE -->
+    <div class="page" id="page-message">
+      <div class="section-title"><i class="fas fa-comment-dots"></i> Send Message</div>
+      <div id="msgStatus" class="status-msg"></div>
+      <div class="card">
+        <div class="form-row">
+          <div class="field-group"><label>Class</label><select id="msgClass"><option value="">Loading…</option></select></div>
+          <div class="field-group"><label>Column</label>
+            <select id="msgCol"><option value="N">Teacher's Message (N)</option><option value="O">Mentor's Message (O)</option></select>
+          </div>
+        </div>
+        <div class="field-group"><label>Message</label><textarea id="msgText" placeholder="e.g. PTM on 15th May at 4pm…"></textarea></div>
+        <button class="btn btn-blue" onclick="sendMessage()"><i class="fas fa-paper-plane"></i> Send to All</button>
+      </div>
+    </div>
+
+    <!-- PUSH VIDEO -->
+    <div class="page" id="page-video">
+      <div class="section-title"><i class="fas fa-video"></i> Push Video</div>
+      <div id="vidStatus" class="status-msg"></div>
+      <div class="card">
+        <div class="form-row">
+          <div class="field-group"><label>Class</label><select id="vidClass"><option value="">Loading…</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="field-group"><label>Title</label><input type="text" id="vidTitle" placeholder="e.g. Chapter 5 — Forces"></div>
+          <div class="field-group"><label>URL</label><input type="url" id="vidUrl" placeholder="https://youtube.com/…"></div>
+        </div>
+        <button class="btn btn-green" onclick="pushVideo()"><i class="fas fa-upload"></i> Push to Class</button>
+      </div>
+    </div>
+
+    <!-- LIVE CLASS -->
+    <div class="page" id="page-liveclass">
+      <div class="section-title"><span class="live-dot" style="margin-right:4px"></span> Live Class</div>
+      <div id="liveStatus" class="status-msg"></div>
+
+      <!-- Start new class -->
+      <div class="card">
+        <div class="card-title"><i class="fas fa-plus-circle" style="color:#22c55e"></i> Start New Live Class</div>
+        <div class="form-row three">
+          <div class="field-group">
+            <label>Room name <span style="color:#f87171">*</span></label>
+            <input type="text" id="instantRoom" placeholder="e.g. math-class6" oninput="sanitizeRoom(this)">
+            <div style="font-size:.68rem;color:#8b949e;margin-top:3px">Letters, numbers and dashes only</div>
+          </div>
+          <div class="field-group">
+            <label>Subject</label>
+            <input type="text" id="instantSubject" placeholder="e.g. Mathematics">
+          </div>
+          <div class="field-group">
+            <label>Target class</label>
+            <select id="instantTargetClass"><option value="">-- Select --</option></select>
+          </div>
+        </div>
+        <button class="btn btn-amber" id="startClassBtn" onclick="startInstantClass()">
+          <i class="fas fa-video"></i> Start Live Class Now
+        </button>
+      </div>
+
+      <!-- Existing sessions -->
+      <div class="card">
+        <div class="card-title"><i class="fas fa-list" style="color:#60a5fa"></i> Your Sessions
+          <button class="btn btn-sm" style="margin-left:auto;background:#21262d;border:1px solid #30363d;color:#e6edf3" onclick="loadLiveSchedule()">
+            <i class="fas fa-sync"></i> Refresh
+          </button>
+        </div>
+        <div id="liveScheduleWrap"><div class="spin"></div> Loading…</div>
+      </div>
+
+      <!-- Teacher board -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 18px 10px;font-size:.78rem;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #30363d;display:flex;align-items:center;gap:8px">
+          <i class="fas fa-chalkboard" style="color:#60a5fa"></i> Teacher Writing Board
+          <span style="font-size:.68rem;font-weight:400;color:#6b7280;margin-left:4px">Students see this when class is live</span>
+        </div>
+        <div id="teacher-board-wrap"></div>
+      </div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="page" id="page-broadcast">
+      <div class="section-title"><i class="fas fa-broadcast-tower"></i> Broadcast</div>
+      <div id="bcastStatus" class="status-msg"></div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-door-open" style="color:#f59e0b"></i> Push Live Room Code to Students</div>
+        <div class="form-row">
+          <div class="field-group"><label>Class</label><select id="bcastClass"><option value="">Loading…</option></select></div>
+          <div class="field-group"><label>Room ID (auto-filled)</label><input type="text" id="bcastRoomId" placeholder="e.g. math-class6"></div>
+        </div>
+        <button class="btn btn-amber" onclick="pushRoomCode()"><i class="fas fa-paper-plane"></i> Push Room Code</button>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-scroll" style="color:#60a5fa"></i> Scrolling Ticker</div>
+        <div class="form-row">
+          <div class="field-group"><label>Class (or ALL)</label><select id="tickerClass"><option value="ALL">All Classes</option></select></div>
+        </div>
+        <div class="field-group"><label>Message</label><input type="text" id="tickerMsg" placeholder="📡 Live class at 4PM today · Room: math-class6"></div>
+        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+          <button class="btn btn-blue" onclick="pushTicker()"><i class="fas fa-broadcast-tower"></i> Send Ticker</button>
+          <button class="btn btn-sm" style="background:#21262d;border:1px solid #30363d;color:#e6edf3" onclick="clearTicker()"><i class="fas fa-times"></i> Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MONITOR -->
+    <div class="page" id="page-monitor">
+      <div class="section-title"><i class="fas fa-eye"></i> Student Monitor</div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-exclamation-triangle" style="color:#f59e0b"></i> Alerts
+          <button class="btn btn-sm" style="margin-left:auto;background:#21262d;border:1px solid #30363d;color:#e6edf3" onclick="loadAlerts()"><i class="fas fa-sync"></i> Refresh</button>
+        </div>
+        <div class="alert-log" id="alertLog"><p style="color:#8b949e;font-size:.82rem">No alerts yet.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-users" style="color:#4ade80"></i> Students in Room
+          <span id="monitorCount" style="font-size:.72rem;font-weight:400;color:#8b949e;margin-left:8px">–</span>
+        </div>
+        <div class="monitor-grid" id="monitorGrid"><p style="color:#8b949e;font-size:.82rem">No active room detected.</p></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxciYsOSxiKN2k9FWMdFuqpt5OKkp6EDsSp2xPmfZcGARVAXWdhbQTIYHabMygnRhk/exec';
+let teacherData    = {};
+let allottedClasses = [];
+let _allStudents   = [];
+let _currentClass  = '';
+let _selectedIds   = new Set();
+let _currentLiveRoom = '';
+let _scheduleInterval = null;
+
+// ── GAS helper ──────────────────────────────────────────────────────────────
+async function gasPost(params) {
+  const body = Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+  const res  = await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+  return res.json();
+}
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+async function init() {
+  const username  = localStorage.getItem('userId');
+  const className = localStorage.getItem('className');
+  if (!username || className !== 'Teachers') { window.location.replace('./teacher_login.html'); return; }
+
+  teacherData = {
+    studentName: localStorage.getItem('studentName') || username,
+    classK: localStorage.getItem('classK') || '',
+    classL: localStorage.getItem('classL') || '',
+    classM: localStorage.getItem('classM') || '',
+  };
+
+  try {
+    const data = await gasPost({ action:'get_teacher_data', teacherId: username });
+    if (data.ok && data.teacher) {
+      teacherData = data.teacher;
+      localStorage.setItem('classK', data.teacher.classK || '');
+      localStorage.setItem('classL', data.teacher.classL || '');
+      localStorage.setItem('classM', data.teacher.classM || '');
+    }
+  } catch(e) {}
+
+  allottedClasses = [teacherData.classK, teacherData.classL, teacherData.classM].filter(Boolean);
+  document.getElementById('teacherInfo').textContent =
+    (teacherData.studentName||username) + ' | Classes: ' + (allottedClasses.join(', ')||'None allotted');
+
+  renderClassPills();
+  populateSelects();
+  loadLiveSchedule();
+
+  // Auto-refresh schedule every 20s
+  _scheduleInterval = setInterval(loadLiveSchedule, 20000);
+
+  // Init teacher whiteboard
+  setTimeout(() => {
+    if (document.getElementById('teacher-board-wrap') && window.TLNBoard) {
+      TLNBoard.init('teacher-board-wrap', { role:'teacher', userName: teacherData.studentName || username });
+    }
+  }, 600);
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'monitor') loadAlerts();
+}
+
+// ── Class pills ───────────────────────────────────────────────────────────────
+function renderClassPills() {
+  const banner = document.getElementById('allotBanner');
+  if (allottedClasses.length) {
+    banner.innerHTML = '✅ You teach: <strong>' + allottedClasses.join(', ') + '</strong>. Click a class below to view students.';
+    banner.style.color = '#4ade80';
+  } else {
+    banner.innerHTML = '⏳ No classes allotted yet. Contact admin.';
+    banner.style.color = '#f87171';
+  }
+  const html = allottedClasses.map(c=>`<div class="class-pill" onclick="selectClass('${c}',this)">${c}</div>`).join('');
+  document.getElementById('classPills').innerHTML     = html || '<span style="color:#8b949e;font-size:.82rem">No classes</span>';
+  document.getElementById('studentClassPills').innerHTML = allottedClasses.map(c=>`<div class="class-pill" onclick="loadStudents('${c}',this)">${c}</div>`).join('');
+}
+
+function populateSelects() {
+  const opts = allottedClasses.map(c=>`<option value="${c}">${c}</option>`).join('');
+  const noOpt = '<option value="">No classes allotted</option>';
+  ['msgClass','vidClass','bcastClass','boardAccessClass'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML=opts||noOpt;
+  });
+  const tc=document.getElementById('instantTargetClass');
+  if(tc) tc.innerHTML='<option value="">-- Select class --</option>'+opts;
+  const tk=document.getElementById('tickerClass');
+  if(tk) tk.innerHTML='<option value="ALL">All Classes</option>'+opts;
+}
+
+// ── My Classes — select class view ───────────────────────────────────────────
+async function selectClass(className, el) {
+  document.querySelectorAll('#classPills .class-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  const card=document.getElementById('classDetailCard');
+  const title=document.getElementById('classDetailTitle');
+  const content=document.getElementById('classDetailContent');
+  card.style.display='block';
+  title.textContent='Students in '+className;
+  content.innerHTML='<div class="spin"></div> Loading…';
+  const data=await gasPost({action:'get_students',class:className});
+  const students=data.students||[];
+  content.innerHTML=students.length
+    ?`<table class="tbl">
+        <thead><tr><th>Name</th><th>Roll</th><th>Parent</th><th>Phone</th><th>Attendance</th></tr></thead>
+        <tbody>${students.map(s=>`<tr>
+          <td>${s.studentName||'–'}</td><td>${s.rollNumber||'–'}</td>
+          <td>${s.parentName||'–'}</td><td>${s.phone||'–'}</td><td>${s.attendance||'–'}</td>
+        </tr>`).join('')}</tbody>
+      </table><p style="margin-top:8px;font-size:.72rem;color:#8b949e">${students.length} students</p>`
+    :'No students found.';
+}
+
+// ── Students tab ──────────────────────────────────────────────────────────────
+async function loadStudents(className, el) {
+  document.querySelectorAll('#studentClassPills .class-pill').forEach(p=>p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  _currentClass=className; _selectedIds.clear(); updateSelectionUI();
+  const wrap=document.getElementById('studentTableWrap');
+  wrap.innerHTML='<div class="spin"></div> Loading…';
+  const data=await gasPost({action:'get_students',class:className});
+  _allStudents=data.students||[];
+  renderStudentTable(_allStudents);
+}
+
+function renderStudentTable(students) {
+  const wrap=document.getElementById('studentTableWrap');
+  if(!students.length){wrap.innerHTML='<p style="color:#8b949e;padding:10px">No students found.</p>';return;}
+  wrap.innerHTML=`<table class="tbl" id="studentTbl">
+    <thead><tr>
+      <th style="width:36px"><input type="checkbox" id="chkAll" onchange="toggleAllChk(this)" style="accent-color:#3b82f6;width:16px;height:16px;cursor:pointer"></th>
+      <th>#</th><th>Name</th><th>Roll</th><th>Parent</th><th>Phone</th><th>Attendance</th>
+    </tr></thead>
+    <tbody>${students.map((s,i)=>`
+      <tr id="srow-${s.userId}" class="${_selectedIds.has(s.userId)?'student-row-selected':''}">
+        <td><input type="checkbox" class="s-chk" data-id="${s.userId}" ${_selectedIds.has(s.userId)?'checked':''} onchange="toggleStudent('${s.userId}',this)" style="accent-color:#3b82f6;width:16px;height:16px;cursor:pointer"></td>
+        <td style="color:#8b949e">${i+1}</td>
+        <td style="font-weight:500">${s.studentName||'–'}</td>
+        <td>${s.rollNumber||'–'}</td><td>${s.parentName||'–'}</td><td>${s.phone||'–'}</td>
+        <td><span style="background:#1a3a2a;color:#4ade80;padding:2px 8px;border-radius:999px;font-size:.68rem">${s.attendance||'–'}</span></td>
+      </tr>`).join('')}
+    </tbody></table>
+    <p style="font-size:.72rem;color:#8b949e;padding:8px 0">${students.length} students in ${_currentClass}</p>`;
+}
+
+function filterStudents(){
+  const q=document.getElementById('studentSearch').value.toLowerCase();
+  renderStudentTable(_allStudents.filter(s=>(s.studentName||'').toLowerCase().includes(q)||(s.rollNumber||'').toLowerCase().includes(q)));
+}
+function toggleStudent(id,chk){if(chk.checked){_selectedIds.add(id);document.getElementById('srow-'+id).classList.add('student-row-selected');}else{_selectedIds.delete(id);document.getElementById('srow-'+id).classList.remove('student-row-selected');}updateSelectionUI();}
+function toggleAllChk(m){document.querySelectorAll('.s-chk').forEach(c=>{c.checked=m.checked;const id=c.dataset.id;if(m.checked){_selectedIds.add(id);document.getElementById('srow-'+id)?.classList.add('student-row-selected');}else{_selectedIds.delete(id);document.getElementById('srow-'+id)?.classList.remove('student-row-selected');}});updateSelectionUI();}
+function selectAllStudents(){_allStudents.forEach(s=>_selectedIds.add(s.userId));renderStudentTable(_allStudents);updateSelectionUI();}
+function clearSelection(){_selectedIds.clear();renderStudentTable(_allStudents);updateSelectionUI();}
+function updateSelectionUI(){const n=_selectedIds.size;document.getElementById('selectedCount').textContent=n+' selected';document.getElementById('selCount2').textContent=n;document.getElementById('selectionActions').style.display=n>0?'block':'none';}
+function showMsgToSelected(){const b=document.getElementById('selMsgBox');b.style.display=b.style.display==='block'?'none':'block';document.getElementById('selVidBox').style.display='none';}
+function showVideoToSelected(){const b=document.getElementById('selVidBox');b.style.display=b.style.display==='block'?'none':'block';document.getElementById('selMsgBox').style.display='none';}
+async function sendMsgToSelected(){const col=document.getElementById('selMsgCol').value;const msg=document.getElementById('selMsgText').value.trim();if(!msg){alert('Type a message.');return;}const ids=Array.from(_selectedIds);const data=await gasPost({action:'msg_to_students',class:_currentClass,studentIds:ids.join(','),column:col,message:msg});const st=document.getElementById('selActionStatus');st.className='status-msg '+(data.ok?'success':'error');st.textContent=data.ok?'✅ Sent to '+ids.length+' students':'❌ '+(data.error||'Error');document.getElementById('selMsgBox').style.display='none';}
+async function sendVidToSelected(){const title=document.getElementById('selVidTitle').value.trim();const url=document.getElementById('selVidUrl').value.trim();if(!title||!url){alert('Fill all fields.');return;}const ids=Array.from(_selectedIds);const data=await gasPost({action:'video_to_students',class:_currentClass,studentIds:ids.join(','),videoTitle:title,videoUrl:url});const st=document.getElementById('selActionStatus');st.className='status-msg '+(data.ok?'success':'error');st.textContent=data.ok?'✅ Video pushed to '+ids.length+' students':'❌ '+(data.error||'Error');document.getElementById('selVidBox').style.display='none';}
+
+// ── Send message ──────────────────────────────────────────────────────────────
+async function sendMessage(){const cls=document.getElementById('msgClass').value;const col=document.getElementById('msgCol').value;const msg=document.getElementById('msgText').value.trim();if(!cls||!msg){alert('Select class and type message.');return;}const data=await gasPost({action:'broadcast_message',class:cls,column:col,message:msg});const st=document.getElementById('msgStatus');st.className='status-msg '+(data.ok?'success':'error');st.textContent=data.ok?'✅ Sent to '+(data.count||'all')+' students':'❌ '+(data.error||'Error');}
+async function pushVideo(){const cls=document.getElementById('vidClass').value;const title=document.getElementById('vidTitle').value.trim();const url=document.getElementById('vidUrl').value.trim();if(!cls||!title||!url){alert('Fill all fields.');return;}const data=await gasPost({action:'push_video',class:cls,videoTitle:title,videoUrl:url});const st=document.getElementById('vidStatus');st.className='status-msg '+(data.ok?'success':'error');st.textContent=data.ok?'✅ Video pushed to '+(data.count||'all')+' students':'❌ '+(data.error||'Error');}
+
+// ── LIVE CLASS ────────────────────────────────────────────────────────────────
+function sanitizeRoom(input) {
+  const clean = input.value.replace(/[^a-zA-Z0-9_-]/g,'').toLowerCase();
+  if (clean !== input.value) input.value = clean;
+}
+
+async function startInstantClass() {
+  const room       = document.getElementById('instantRoom').value.trim();
+  const subject    = document.getElementById('instantSubject').value.trim() || 'Live Class';
+  const targetCls  = document.getElementById('instantTargetClass').value   || allottedClasses[0] || 'All';
+  const teacherName= teacherData.studentName || localStorage.getItem('userId');
+  const btn        = document.getElementById('startClassBtn');
+
+  if (!room) { alert('Enter a room name (letters and dashes only, e.g. math-class6).'); return; }
+  const safeRoom = room.replace(/[^a-zA-Z0-9_-]/g,'').toLowerCase();
+  if (!safeRoom) { alert('Room name has invalid characters.'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin"></div> Starting…';
+
+  try {
+    // 1. Schedule in sheet — dedup by room_id
+    const data = await gasPost({
+      action:'schedule_class', title:subject+' — '+targetCls,
+      subject, teacher:teacherName,
+      scheduled_time: new Date().toISOString(),
+      room_id: safeRoom, target_class: targetCls, status:'live'
+    });
+
+    // 2. Force all rows for this room to live
+    await gasPost({ action:'update_room_status', room_id:safeRoom, status:'live' });
+
+    // 3. Push room code + ticker to students
+    await gasPost({
+      action:'set_class_access', class_name:targetCls,
+      live_room_id: safeRoom,
+      ticker_msg: '📡 LIVE NOW: '+subject+' · Room: '+safeRoom+' · Join from your homepage!'
+    });
+
+    _currentLiveRoom = safeRoom;
+    document.getElementById('bcastRoomId').value = safeRoom;
+
+    await loadLiveSchedule();
+    const st = document.getElementById('liveStatus');
+    st.className='status-msg success';
+    st.textContent='✅ Class started! Room: '+safeRoom+' · Students notified.';
+
+  } catch(e) {
+    const st = document.getElementById('liveStatus');
+    st.className='status-msg error';
+    st.textContent='❌ Error: '+e.message;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-video"></i> Start Live Class Now';
+
+  // Open classroom
+  localStorage.setItem('liveRoomId',    safeRoom);
+  localStorage.setItem('liveRoomTitle', subject+' — '+targetCls);
+  window.open('./classroom.html','_blank');
+}
+
+async function endLiveClass(classId, roomId) {
+  if (!confirm('End this class? Students will see it as ended.')) return;
+  try {
+    await gasPost({ action:'update_class_status', class_id:classId, status:'ended' });
+    if (roomId) {
+      await gasPost({ action:'update_room_status', room_id:roomId, status:'ended' });
+      // Clear live room code from students' homepage
+      await gasPost({ action:'set_class_access', class_name:'ALL', live_room_id:'', ticker_msg:'' });
+      allottedClasses.forEach(async cls => {
+        await gasPost({ action:'set_class_access', class_name:cls, live_room_id:'', ticker_msg:'' });
+      });
+    }
+    await loadLiveSchedule();
+  } catch(e) { alert('Error ending class: '+e.message); }
+}
+
+async function rejoinClass(roomId, title) {
+  localStorage.setItem('liveRoomId',    roomId);
+  localStorage.setItem('liveRoomTitle', title);
+  window.open('./classroom.html','_blank');
+}
+
+async function loadLiveSchedule() {
+  const wrap = document.getElementById('liveScheduleWrap');
+  try {
+    const data    = await gasPost({ action:'live_schedule', class: allottedClasses[0]||'' });
+    const classes = (data.classes||[]).filter(c=>c.status!=='ended');
+
+    if (!classes.length) {
+      wrap.innerHTML='<p style="color:#8b949e;font-size:.82rem">No active sessions. Use the form above to start one.</p>';
+      return;
+    }
+
+    const statusColors = { live:'#f87171', upcoming:'#60a5fa', ended:'#6b7280', soon:'#4ade80' };
+    wrap.innerHTML = classes.map(c => {
+      const st    = (c.status||'upcoming').toLowerCase();
+      const isLive= st === 'live';
+      return `<div class="live-card">
+        <div class="live-card-info">
+          <div class="live-card-title">
+            ${isLive?'<span class="live-dot" style="margin-right:6px"></span>':''}${c.title||c.room_id}
+          </div>
+          <div class="live-card-sub">
+            ${c.subject} · ${new Date(c.scheduled_time).toLocaleString()} ·
+            <span class="badge ${isLive?'badge-live':'badge-upcoming'}">${st.toUpperCase()}</span>
+          </div>
+          <div style="font-size:.72rem;color:#8b949e;margin-top:2px">Class: ${c.target_class} · Room: <code style="background:#21262d;padding:1px 5px;border-radius:4px">${c.room_id}</code></div>
+        </div>
+        <div class="live-card-actions">
+          <button class="btn btn-amber btn-sm" onclick="rejoinClass('${c.room_id}','${c.title||c.room_id}')">
+            <i class="fas fa-video"></i> ${isLive?'Rejoin':'Start'}
+          </button>
+          ${isLive?`<button class="btn btn-red btn-sm" onclick="endLiveClass('${c.class_id}','${c.room_id}')">
+            <i class="fas fa-stop"></i> End
+          </button>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    wrap.innerHTML='<p style="color:#f87171;font-size:.82rem">Error loading schedule.</p>';
+  }
+}
+
+// ── Broadcast ─────────────────────────────────────────────────────────────────
+async function pushRoomCode(){const cls=document.getElementById('bcastClass').value;const room=document.getElementById('bcastRoomId').value.trim();if(!cls||!room){alert('Select class and enter room.');return;}const data=await gasPost({action:'set_class_access',class_name:cls,live_room_id:room,ticker_msg:'📡 LIVE CLASS NOW · Room: '+room+' · Tap JOIN CLASS on your homepage!'});const st=document.getElementById('bcastStatus');st.className='status-msg '+(data.ok?'success':'error');st.textContent=data.ok?'✅ Room code pushed to '+cls:'❌ Error';}
+async function pushTicker(){const cls=document.getElementById('tickerClass').value||'ALL';const msg=document.getElementById('tickerMsg').value.trim();if(!msg){alert('Enter a message.');return;}const data=await gasPost({action:'set_class_access',class_name:cls,ticker_msg:msg});const st=document.getElementById('bcastStatus');st.className='status-msg '+(data.ok?'success':'error');st.textContent=data.ok?'✅ Ticker sent to '+cls:'❌ Error';}
+async function clearTicker(){const cls=document.getElementById('tickerClass').value||'ALL';await gasPost({action:'set_class_access',class_name:cls,ticker_msg:'',live_room_id:''});document.getElementById('tickerMsg').value='';const st=document.getElementById('bcastStatus');st.className='status-msg success';st.textContent='✅ Ticker cleared for '+cls;}
+
+// ── Monitor ───────────────────────────────────────────────────────────────────
+async function loadAlerts() {
+  try {
+    const room = _currentLiveRoom || localStorage.getItem('liveRoomId') || '';
+    if (!room) {
+      document.getElementById('monitorGrid').innerHTML='<p style="color:#8b949e;font-size:.82rem">Start a live class to monitor students.</p>';
+      return;
+    }
+    const data  = await gasPost({ action:'get_attendance_alerts', room_id:room });
+    const alerts= data.alerts || [];
+    const log   = document.getElementById('alertLog');
+    if (!alerts.length) {
+      log.innerHTML='<p style="color:#8b949e;font-size:.82rem">No alerts.</p>';
+    } else {
+      log.innerHTML = alerts.map(a=>`
+        <div class="alert-item">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div><strong>${a.student}</strong> — ${a.type} <span style="color:#8b949e">(${a.ts})</span></div>
+        </div>`).join('');
+    }
+    // Show connected peers
+    const peers = await gasPost({ action:'voice_peers', room_id:room, peer_id:'teacher-monitor' });
+    const peerList = peers.peers || [];
+    const monitorCount = document.getElementById('monitorCount');
+    if (monitorCount) monitorCount.textContent = peerList.length + ' in room';
+    const grid = document.getElementById('monitorGrid');
+    if (!peerList.length) {
+      grid.innerHTML='<p style="color:#8b949e;font-size:.82rem">No students connected to voice yet.</p>';
+    } else {
+      grid.innerHTML = peerList.map(p=>`
+        <div class="monitor-tile present">
+          <div class="monitor-av" style="background:linear-gradient(135deg,#0073e6,#8b5cf6)">${(p.name||'S')[0].toUpperCase()}</div>
+          <div class="monitor-name">${p.name||p.id}</div>
+          <div class="monitor-status" style="color:#4ade80">🎤 ${p.muted?'Muted':'Active'}</div>
+        </div>`).join('');
+    }
+  } catch(e) {}
+}
+
+function logout(){if(confirm('Logout?')){localStorage.clear();window.location.href='./teacher_login.html';}}
+
+init();
+</script>
+</body>
+</html>

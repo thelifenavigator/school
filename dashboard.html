@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Life Navigator Dashboard — Enhanced</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+    .loader-ring { border: 8px solid #f3f3f3; border-top: 8px solid #3b82f6; border-radius: 50%; width: 56px; height: 56px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} }
+    .data-card { box-shadow: 0 8px 20px rgba(15,23,42,0.06); border-radius: 14px; overflow: hidden; transition: transform .18s ease, box-shadow .18s ease; }
+    .data-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(15,23,42,0.12); }
+    .pill { display:inline-block; background:#eef2ff; color:#3730a3; font-weight:600; padding:6px 10px; border-radius:9999px; font-size:12px; }
+    .muted { color:#6b7280; }
+    .meaning { background:#f8fafc; border-left:4px solid #e2e8f0; padding:8px 12px; border-radius:8px; margin-bottom:8px; color:#334155; font-size:13px; }
+    .take-test-btn { background:linear-gradient(90deg,#3b82f6,#6366f1); color:#fff; padding:8px 12px; border-radius:10px; display:inline-flex; gap:8px; align-items:center; font-weight:600; text-decoration:none; }
+    .small-box { background:#fff; border:1px solid #eef2ff; padding:8px 10px; border-radius:8px; }
+    details summary { cursor:pointer; }
+    .section-title { font-size:18px; font-weight:700; color:#0f172a; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <header class="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-md">
+    <div class="max-w-7xl mx-auto py-4 px-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white">Life Navigator Dashboard</h1>
+        <p class="text-sm text-white/90 mt-1">Student-centered personal growth insights</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="text-right text-white mr-4">
+          <div id="date-display" class="font-semibold"></div>
+          <div id="time-display" class="text-sm"></div>
+        </div>
+        <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg">Reset Session</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto py-6 px-4">
+    <!-- Greeting -->
+    <section class="bg-white rounded-xl p-6 mb-6 shadow-lg">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">Hi <span id="student-name">Student</span> 👋</h2>
+          <p class="text-gray-600 mt-1">Welcome back to your Life Navigator Dashboard.</p>
+          <p class="text-sm text-gray-500 mt-1">Hello <span id="parent-name">Parent</span> — let's support <span id="student-name-parent">Student</span> together.</p>
+        </div>
+        <div class="text-sm text-gray-700">
+          <div class="small-box"><strong>ID:</strong> <span id="user-id-display">...</span></div>
+          <div class="mt-2 small-box"><strong>Class:</strong> <span id="user-class-display">...</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Loader & Cards -->
+    <div id="dashboard-content" class="space-y-8">
+      <div id="data-loader" class="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-lg">
+        <div class="loader-ring"></div>
+        <p class="mt-4 text-xl font-semibold text-gray-700">Importing your assessments...</p>
+        <p class="text-sm text-gray-500 mt-2">Fetching assessment and goals data from the server.</p>
+      </div>
+
+      <div id="test-data-section" class="hidden">
+        <h3 class="section-title mb-2">Your Assessment Results</h3>
+        <p class="muted mb-4 text-sm">Below are your last saved values. Use the Take/Retake buttons to update any test.</p>
+
+        <div id="no-data-message" class="hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg">
+          <p class="font-bold">Data Not Found</p>
+          <p>It looks like you haven’t completed the assessments yet. Please use the Take/Retake links to begin.</p>
+        </div>
+
+        <!-- Grid of cards -->
+        <div id="data-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+        <!-- Goals will be inserted after cards as full width -->
+        <div id="goals-section" class="mt-6 hidden"></div>
+
+        <!-- Suggestions (appears after all sections are displayed) -->
+        <div id="suggestions-section" class="mt-6 hidden bg-white rounded-xl shadow-lg p-6">
+          <h3 class="text-xl font-bold text-gray-800 mb-4">💡 Suggestions for Parents & Teachers</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 class="font-semibold text-blue-600">For Parents</h4>
+              <div id="parent-suggestions" class="mt-2 text-gray-700"></div>
+            </div>
+            <div>
+              <h4 class="font-semibold text-green-600">For Teachers</h4>
+              <div id="teacher-suggestions" class="mt-2 text-gray-700"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // CONFIG: GAS endpoint (unchanged)
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyvp23o6bpUWHzc-jtl_hcQCs7I1jj3doD_G-WLTWQ-2f0hPp4hXcNGffJ0uxDLSkT5/exec";
+    // Retake URLs (dynamically resolved relative to current location)
+    const BASE_PATH = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+    const RETAKE_SWOT_URL = `${BASE_PATH}/VISION_MISSION_SWOT.html`;
+    const RETAKE_LEARNING_URL = `${BASE_PATH}/LEARNING_STYLES.html`;
+    const RETAKE_BFI_URL = `${BASE_PATH}/PERSONALITY_FORM.html`;
+    const RETAKE_MOBILE_URL = `${BASE_PATH}/MOBILE_DE-ADDICTION.html`;
+    const RETAKE_EPN_URL = `${BASE_PATH}/EMOTIONAL_PERSONALITY_NAVIGATOR.html`;
+    const RETAKE_RIECSE_URL = `${BASE_PATH}/RIASEC.html`;
+    const RETAKE_GOALS_URL = `${BASE_PATH}/GOALS_AND_HABITS.html`;
+
+    // Column mapping (same as your original dashboard)
+    const IDX = {
+      SWOT: { start:0, len:13, fields:{ DATE:0, S:1, W:2, O:3, T:4, STU_VISION:5, PAR_VISION:6, SUGG_ROLE:7, SUMMARY:8, GOLDEN_TIPS:9, ROADMAP_STU:10, ROADMAP_PAR:11, ROADMAP_SWOT:12 } },
+      LEARNING: { start:13, len:31, fields:{ DATE:0, VARK_TYPE:1, KOLB_TYPE:2, GARDNER_TYPE:3, HM_TYPE:4, ANALYSIS:5, ADVICE:6, V:7, A:8, R:9, K:10, VARK_SCORE:11, ACCOM:12, DIVERGER:13, CONVERGER:14, ASSIMILATOR:15, LING:16, LOGMATH:17, SPATIAL:18, BODKIN:19, MUSICAL:20, INTERP:21, INTRAP:22, NATURAL:23, EXIST:24, L_BRAIN:25, R_BRAIN:26, VARK_DETAILS:27, KOLB_DETAILS:28, GARD_DETAILS:29, HM_DETAILS:30 } },
+      BFI: { start:44, len:13, fields:{ DATE:0, O:1, C:2, E:3, A:4, N:5, O_DESC:6, C_DESC:7, E_DESC:8, A_DESC:9, N_DESC:10, ANALYSIS:11, ADVICE:12 } },
+      MOBILE: { start:57, len:8, fields:{ DATE:0, SCREEN_TIME:1, IMPACT:2, RISK:3, ANALYSIS:4, SUGG:5, DOS:6, DONTS:7 } },
+      EPN: { start:65, len:15, fields:{ DATE:0, EQ:1, SQ:2, PQ:3, AQ:4, EQ_TYPE:5, SQ_TYPE:6, PQ_TYPE:7, AQ_TYPE:8, SUMMARY:9, TIPS:10, ROADMAP:11, STRENGTHS:12, WEAKNESSES:13, GOALS:14 } },
+      RIECSE: { start:80, len:10, fields:{ DATE:0, R:1, I:2, E:3, C:4, S:5, E2:6, SUMMARY:7, ACTION:8, NOTES:9 } }
+    };
+
+    // Goals mapping (HE..HM columns returned as goalsRaw)
+    const GOALS_FIELDS = { DATE:0, STG_LIST:1, STG_CUSTOM:2, LTG_LIST:3, LTG_CUSTOM:4, DAILY_HABITS:5, MOBILE_EXERCISES:6, STRESS_EXERCISES:7, NOTES:8 };
+
+    function safe(v, fallback='') { return (v===undefined||v===null||v==='')?fallback:v; }
+    function sliceRange(raw, start, len) { return (raw||[]).slice(start, start+len); }
+    function nonEmpty(arr){ return (arr||[]).some(v=>String(v||'').trim()!==''); }
+
+    // Render helpers
+    function makeCard(title, meaning, date, bodyHTML, colorClass, retakeUrl) {
+      return `
+        <div class="data-card bg-white border border-gray-100">
+          <div class="${colorClass} text-white p-4 flex items-center justify-between">
+            <div class="font-bold">${title}</div>
+            <div class="text-xs opacity-90"><a href="${retakeUrl}" target="_blank" class="pill">Take / Retake</a></div>
+          </div>
+          <div class="p-4">
+            <div class="meaning">🧠 ${meaning}</div>
+            <div class="text-xs text-gray-400 mb-3">Last updated: ${safe(date,'N/A')}</div>
+            ${bodyHTML}
+            <div class="mt-4"><a class="take-test-btn" href="${retakeUrl}" target="_blank">🎯 Take / Retake Test</a></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSWOT(block) {
+      const f = IDX.SWOT.fields;
+      const body = `
+        <div class="space-y-2 text-gray-700">
+          <div><strong>Strengths:</strong> ${safe(block[f.S])}</div>
+          <div><strong>Weaknesses:</strong> ${safe(block[f.W])}</div>
+          <div><strong>Opportunities:</strong> ${safe(block[f.O])}</div>
+          <div><strong>Threats:</strong> ${safe(block[f.T])}</div>
+          <hr class="my-2" />
+          <div><strong>Student Vision:</strong> ${safe(block[f.STU_VISION])}</div>
+          <div><strong>Parent Vision:</strong> ${safe(block[f.PAR_VISION])}</div>
+          <div><strong>Suggested Role:</strong> ${safe(block[f.SUGG_ROLE])}</div>
+          <div><strong>Summary:</strong> ${safe(block[f.SUMMARY])}</div>
+          <div><strong>Golden Tips:</strong> ${safe(block[f.GOLDEN_TIPS])}</div>
+          <div><strong>Roadmap (Student):</strong> ${safe(block[f.ROADMAP_STU])}</div>
+          <div><strong>Roadmap (Parent):</strong> ${safe(block[f.ROADMAP_PAR])}</div>
+          <div><strong>Roadmap (SWOT):</strong> ${safe(block[f.ROADMAP_SWOT])}</div>
+        </div>
+      `;
+      return makeCard('SWOT Analysis','Identifies Strengths, Weaknesses, Opportunities and Threats to guide growth.', block[IDX.SWOT.fields.DATE], body, 'bg-indigo-600', RETAKE_SWOT_URL);
+    }
+
+    function renderLearning(block) {
+      const f = IDX.LEARNING.fields;
+      const dom = [block[f.VARK_TYPE], block[f.KOLB_TYPE], block[f.GARDNER_TYPE], block[f.HM_TYPE]].filter(Boolean).join(' · ');
+      const body = `
+        <div class="space-y-2 text-gray-700">
+          <div><strong>Dominant Profiles:</strong> ${safe(dom,'—')}</div>
+          <div><strong>VARK Scores:</strong> V ${safe(block[f.V])}, A ${safe(block[f.A])}, R ${safe(block[f.R])}, K ${safe(block[f.K])}</div>
+          <div><strong>Hemispheric:</strong> Left ${safe(block[f.L_BRAIN])} · Right ${safe(block[f.R_BRAIN])}</div>
+          <div><strong>Analysis:</strong> ${safe(block[f.ANALYSIS])}</div>
+          <div><strong>Advice:</strong> ${safe(block[f.ADVICE])}</div>
+          <details class="mt-2"><summary class="font-semibold">More details</summary>
+            <div class="mt-2 text-sm text-gray-600">
+              VARK profile details: ${safe(block[f.VARK_DETAILS])}<br/>
+              Kolb details: ${safe(block[f.KOLB_DETAILS])}<br/>
+              Gardner details: ${safe(block[f.GARD_DETAILS])}<br/>
+              HM details: ${safe(block[f.HM_DETAILS])}
+            </div>
+          </details>
+        </div>
+      `;
+      return makeCard('Learning Styles','Shows how the student learns best (Visual, Auditory, Reading, Kinesthetic and other models).', block[f.DATE], body, 'bg-blue-600', RETAKE_LEARNING_URL);
+    }
+
+    function renderBFI(block) {
+      const f = IDX.BFI.fields;
+      const body = `
+        <div class="space-y-2 text-gray-700">
+          <div><strong>OCEAN Scores:</strong> O ${safe(block[f.O])} · C ${safe(block[f.C])} · E ${safe(block[f.E])} · A ${safe(block[f.A])} · N ${safe(block[f.N])}</div>
+          <div><strong>Trait summaries:</strong> ${safe(block[f.O_DESC])} ${safe(block[f.C_DESC])} ${safe(block[f.E_DESC])} ${safe(block[f.A_DESC])} ${safe(block[f.N_DESC])}</div>
+          <div><strong>Summary:</strong> ${safe(block[f.ANALYSIS])}</div>
+          <div><strong>Advice:</strong> ${safe(block[f.ADVICE])}</div>
+        </div>
+      `;
+      return makeCard('BFI Personality','Personality profile across Openness, Conscientiousness, Extraversion, Agreeableness and Neuroticism.', block[f.DATE], body, 'bg-purple-600', RETAKE_BFI_URL);
+    }
+
+    function renderMobile(block) {
+      const f = IDX.MOBILE.fields;
+      const body = `
+        <div class="space-y-2 text-gray-700">
+          <div><strong>Screen Time:</strong> ${safe(block[f.SCREEN_TIME])}</div>
+          <div><strong>Impact / Risk:</strong> ${safe(block[f.IMPACT])} · ${safe(block[f.RISK])}</div>
+          <div><strong>Analysis:</strong> ${safe(block[f.ANALYSIS])}</div>
+          <div><strong>Suggestions:</strong> ${safe(block[f.SUGG])}</div>
+          <div><strong>Do's:</strong> ${safe(block[f.DOS])}</div>
+          <div><strong>Don'ts:</strong> ${safe(block[f.DONTS])}</div>
+        </div>
+      `;
+      return makeCard('Mobile Addiction','Examines phone/screen use, its effects and practical ways to manage usage.', block[f.DATE], body, 'bg-teal-600', RETAKE_MOBILE_URL);
+    }
+
+    function renderEPN(block) {
+      const f = IDX.EPN.fields;
+      const types = [block[f.EQ_TYPE], block[f.SQ_TYPE], block[f.PQ_TYPE], block[f.AQ_TYPE]].filter(Boolean).join(' · ');
+      const body = `
+        <div class="space-y-2 text-gray-700">
+          <div><strong>Scores:</strong> EQ ${safe(block[f.EQ])} · SQ ${safe(block[f.SQ])} · PQ ${safe(block[f.PQ])} · AQ ${safe(block[f.AQ])}</div>
+          <div><strong>Types:</strong> ${safe(types)}</div>
+          <div><strong>Summary:</strong> ${safe(block[f.SUMMARY])}</div>
+          <div><strong>Tips:</strong> ${safe(block[f.TIPS])}</div>
+          <div><strong>Roadmap:</strong> ${safe(block[f.ROADMAP])}</div>
+          <div><strong>Strengths:</strong> ${safe(block[f.STRENGTHS])}</div>
+          <div><strong>Weaknesses:</strong> ${safe(block[f.WEAKNESSES])}</div>
+          <div><strong>Goals:</strong> ${safe(block[f.GOALS])}</div>
+        </div>
+      `;
+      return makeCard('Emotional Personality (EPN)','Assess emotional, social and adaptability strengths and areas to grow.', block[f.DATE], body, 'bg-amber-600', RETAKE_EPN_URL);
+    }
+
+    function renderRiecse(block) {
+      const f = IDX.RIECSE.fields;
+      const pairs = [['R',Number(block[f.R])],['I',Number(block[f.I])],['E',Number(block[f.E])],['C',Number(block[f.C])],['S',Number(block[f.S])],['E2',Number(block[f.E2])]];
+      const valid = pairs.filter(p=>!isNaN(p[1]));
+      valid.sort((a,b)=>b[1]-a[1]);
+      const dominant = valid.length?valid[0][0]:'—';
+      const body = `
+        <div class="space-y-2 text-gray-700">
+          <div><strong>Scores:</strong> R ${safe(block[f.R])} · I ${safe(block[f.I])} · E ${safe(block[f.E])} · C ${safe(block[f.C])} · S ${safe(block[f.S])} · E2 ${safe(block[f.E2])}</div>
+          <div><strong>Dominant:</strong> ${dominant}</div>
+          <div><strong>Summary:</strong> ${safe(block[f.SUMMARY])}</div>
+          <div><strong>Action Plan:</strong> ${safe(block[f.ACTION])}</div>
+          <div><strong>Notes:</strong> ${safe(block[f.NOTES])}</div>
+        </div>
+      `;
+      return makeCard('RIECSE (Career Interests)','Shows interest scores across R, I, E, C, S and E2 to suggest career areas.', block[f.DATE], body, 'bg-pink-600', RETAKE_RIECSE_URL);
+    }
+
+    function renderGoals(goals) {
+      const f = GOALS_FIELDS;
+      const body = `
+        <div class="space-y-2 text-gray-700">
+          <div><strong>Short-term goals (predefined):</strong> ${safe(goals[f.STG_LIST])}</div>
+          <div><strong>Short-term goals (custom):</strong> ${safe(goals[f.STG_CUSTOM])}</div>
+          <div><strong>Long-term goals (predefined):</strong> ${safe(goals[f.LTG_LIST])}</div>
+          <div><strong>Long-term goals (custom):</strong> ${safe(goals[f.LTG_CUSTOM])}</div>
+          <div><strong>Daily habits to build:</strong> ${safe(goals[f.DAILY_HABITS])}</div>
+          <div><strong>Mobile exercises:</strong> ${safe(goals[f.MOBILE_EXERCISES])}</div>
+          <div><strong>Stress exercises:</strong> ${safe(goals[f.STRESS_EXERCISES])}</div>
+          <div><strong>Notes:</strong> ${safe(goals[f.NOTES])}</div>
+        </div>
+      `;
+      return `
+        <div class="bg-white border border-gray-100 rounded-xl p-4 data-card">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-lg font-bold">Goals & Habits</div>
+            <div class="text-sm text-gray-500">Last updated: ${safe(goals[f.DATE],'N/A')}</div>
+          </div>
+          <div class="meaning">🎯 Shows the student's short-term and long-term goals plus daily habits to build progress.</div>
+          ${body}
+          <div class="mt-4"><a class="take-test-btn" href="${RETAKE_GOALS_URL}" target="_blank">✍️ Edit Goals</a></div>
+        </div>
+      `;
+    }
+
+    // Build suggestions in simple language, using the available fields
+    function buildSuggestions(ctx) {
+      // ctx contains objects: swot, learning, bfi, mobile, epn, riecse, goals
+      const parentList = [];
+      const teacherList = [];
+      // Parent suggestions: from SWOT ROADMAP_PAR, EPN.TIPS, GOALS NOTES, MOBILE SUGG
+      if (safe(ctx.swot && ctx.swot[IDX.SWOT.fields.ROADMAP_PAR])) parentList.push(`From SWOT: ${ctx.swot[IDX.SWOT.fields.ROADMAP_PAR]}`);
+      if (safe(ctx.epn && ctx.epn[IDX.EPN.fields.TIPS])) parentList.push(`Emotional tips: ${ctx.epn[IDX.EPN.fields.TIPS]}`);
+      if (safe(ctx.goals && ctx.goals[GOALS_FIELDS.NOTES])) parentList.push(`Goals notes: ${ctx.goals[GOALS_FIELDS.NOTES]}`);
+      if (safe(ctx.mobile && ctx.mobile[IDX.MOBILE.fields.SUGG])) parentList.push(`Mobile suggestions: ${ctx.mobile[IDX.MOBILE.fields.SUGG]}`);
+      if (safe(ctx.learning && ctx.learning[IDX.LEARNING.fields.ADVICE])) parentList.push(`Learning advice: ${ctx.learning[IDX.LEARNING.fields.ADVICE]}`);
+
+      // Teacher suggestions: from BFI advice, SWOT ROADMAP_STU, EPN ROADMAP, RIECSE ACTION
+      if (safe(ctx.bfi && ctx.bfi[IDX.BFI.fields.ADVICE])) teacherList.push(`Personality advice: ${ctx.bfi[IDX.BFI.fields.ADVICE]}`);
+      if (safe(ctx.swot && ctx.swot[IDX.SWOT.fields.ROADMAP_STU])) teacherList.push(`From SWOT: ${ctx.swot[IDX.SWOT.fields.ROADMAP_STU]}`);
+      if (safe(ctx.epn && ctx.epn[IDX.EPN.fields.ROADMAP])) teacherList.push(`EPN roadmap: ${ctx.epn[IDX.EPN.fields.ROADMAP]}`);
+      if (safe(ctx.riecse && ctx.riecse[IDX.RIECSE.fields.ACTION])) teacherList.push(`Career action: ${ctx.riecse[IDX.RIECSE.fields.ACTION]}`);
+
+      // Fallback friendly phrasing
+      const parentHtml = parentList.length?`<ul class="list-disc pl-5 text-gray-700">${parentList.map(i=>`<li>${i}</li>`).join('')}`+`</ul>`:`<p class="text-gray-700">No specific parent suggestions found. Consider reviewing the student's goals and roadmap and set weekly short reviews.</p>`;
+      const teacherHtml = teacherList.length?`<ul class="list-disc pl-5 text-gray-700">${teacherList.map(i=>`<li>${i}</li>`).join('')}`+`</ul>`:`<p class="text-gray-700">No specific teacher suggestions found. Consider aligning classroom tasks to the student's strengths and scaffold weaker areas.</p>`;
+
+      return { parentHtml, teacherHtml };
+    }
+
+    // Page lifecycle: fetch, render all 6 assessments + goals, then show suggestions
+    document.addEventListener('DOMContentLoaded', async()=>{
+      // session init & display
+      let currentUserId = localStorage.getItem('userId');
+      let currentUserClass = localStorage.getItem('class');
+      if(!currentUserId){ currentUserId = 'user-'+Date.now(); currentUserClass='DefaultClass'; localStorage.setItem('userId',currentUserId); localStorage.setItem('class',currentUserClass); localStorage.setItem('studentName','Student'); localStorage.setItem('parentName','Parent'); }
+      document.getElementById('user-id-display').textContent = currentUserId;
+      document.getElementById('user-class-display').textContent = currentUserClass;
+      document.getElementById('student-name').textContent = localStorage.getItem('studentName')||'Student';
+      document.getElementById('student-name-parent').textContent = localStorage.getItem('studentName')||'Student';
+      document.getElementById('parent-name').textContent = localStorage.getItem('parentName')||'Parent';
+      document.getElementById('logout-btn').addEventListener('click', ()=>{ localStorage.removeItem('userId'); localStorage.removeItem('class'); localStorage.removeItem('studentName'); localStorage.removeItem('parentName'); location.reload(); });
+
+      // clock
+      function updateClock(){ const n=new Date(); document.getElementById('time-display').textContent = n.toLocaleTimeString(); document.getElementById('date-display').textContent = n.toLocaleDateString(); }
+      updateClock(); setInterval(updateClock,1000);
+
+      const loader = document.getElementById('data-loader');
+      const dataSection = document.getElementById('test-data-section');
+      const noData = document.getElementById('no-data-message');
+      const container = document.getElementById('data-cards-container');
+      const goalsSection = document.getElementById('goals-section');
+      const suggestionsSection = document.getElementById('suggestions-section');
+
+      loader.classList.remove('hidden');
+      dataSection.classList.add('hidden');
+      noData.classList.add('hidden');
+      container.innerHTML='';
+      goalsSection.innerHTML='';
+      suggestionsSection.classList.add('hidden');
+
+      try {
+        const url = `${GAS_URL}?userId=${encodeURIComponent(currentUserId)}&class=${encodeURIComponent(currentUserClass)}`;
+        const res = await fetch(url);
+        const payload = await res.json();
+        if(payload.result!=='success'){ noData.classList.remove('hidden'); noData.innerHTML=`<p class="font-bold">Server Error</p><p>${payload.message||'Unknown error'}</p>`; dataSection.classList.remove('hidden'); loader.classList.add('hidden'); return; }
+
+        const assess = payload.assessmentRaw||[];
+        const goals = payload.goalsRaw||[];
+        const hasAssess = assess.length>0 && String(assess[0]||'').trim()!=='';
+
+        if(!hasAssess){ noData.classList.remove('hidden'); dataSection.classList.remove('hidden'); loader.classList.add('hidden'); return; }
+
+        // slice all blocks
+        const swot = sliceRange(assess, IDX.SWOT.start, IDX.SWOT.len);
+        const learning = sliceRange(assess, IDX.LEARNING.start, IDX.LEARNING.len);
+        const bfi = sliceRange(assess, IDX.BFI.start, IDX.BFI.len);
+        const mobile = sliceRange(assess, IDX.MOBILE.start, IDX.MOBILE.len);
+        const epn = sliceRange(assess, IDX.EPN.start, IDX.EPN.len);
+        const riecse = sliceRange(assess, IDX.RIECSE.start, IDX.RIECSE.len);
+
+        // Render each card (full detail) if non-empty
+        if(nonEmpty(swot)) container.insertAdjacentHTML('beforeend', renderSWOT(swot));
+        if(nonEmpty(learning)) container.insertAdjacentHTML('beforeend', renderLearning(learning));
+        if(nonEmpty(bfi)) container.insertAdjacentHTML('beforeend', renderBFI(bfi));
+        if(nonEmpty(mobile)) container.insertAdjacentHTML('beforeend', renderMobile(mobile));
+        if(nonEmpty(epn)) container.insertAdjacentHTML('beforeend', renderEPN(epn));
+        if(nonEmpty(riecse)) container.insertAdjacentHTML('beforeend', renderRiecse(riecse));
+
+        // Goals (always show if any goals data present)
+        if(goals && goals.length>0 && goals.some(c=>String(c||'').trim()!=='')){
+          goalsSection.classList.remove('hidden');
+          goalsSection.innerHTML = renderGoals(goals);
+        }
+
+        // After rendering all sections, generate suggestions (clear, simple language)
+        const ctx = { swot, learning, bfi, mobile, epn, riecse, goals };
+        const sug = buildSuggestions(ctx);
+        document.getElementById('parent-suggestions').innerHTML = sug.parentHtml;
+        document.getElementById('teacher-suggestions').innerHTML = sug.teacherHtml;
+        suggestionsSection.classList.remove('hidden');
+
+        dataSection.classList.remove('hidden');
+      } catch(err){
+        console.error('Fetch Error', err);
+        const msg = document.createElement('div');
+        msg.className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative';
+        msg.innerHTML = '<strong class=\"font-bold\">Connection Error:</strong> Could not reach the server.';
+        document.getElementById('dashboard-content').appendChild(msg);
+      } finally {
+        loader.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
+
